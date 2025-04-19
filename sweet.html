@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virunthompal - Global Sweets Recipe Search</title>
+  <link rel="icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  </head>
+  
+  <style>
+   * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      height: 100vh;
+    }
+
+    nav {
+      width: 250px;
+      background: #ffffff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1rem;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: #4a90e2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #eaf1f8;
+      color: #4a90e2;
+    }
+
+    .main {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    #ingredientInput {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    #autocompleteList {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+    }
+
+    .autocomplete-item {
+      padding: 0.75rem;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+
+    .recipe-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .recipe-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    .recipe-card h3 {
+      color: #4a90e2;
+      margin-bottom: 0.5rem;
+    }
+
+    .steps ol {
+      padding-left: 1.5rem;
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      padding: 1rem;
+      background: #4a90e2;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    body.dark {
+      background: #1e1e1e;
+      color: #eee;
+    }
+
+    body.dark nav {
+      background: #2c2c2c;
+    }
+
+    body.dark .main {
+      background: #1e1e1e;
+    }
+
+    body.dark #ingredientInput,
+    body.dark .recipe-card,
+    body.dark #autocompleteList {
+      background: #2c2c2c;
+      color: #eee;
+      border: 1px solid #555;
+    }
+
+    body.dark .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Virunthompal</div>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\about.html" class="nav-item"><i class="fas fa-user"></i><span>About Us</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\contact.html" class="nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+ 
+  </nav>
+
+  <div class="main">
+    <div class="search-box">
+      <input type="text" id="ingredientInput" placeholder="Type ingredients (e.g. chocolate, milk)" oninput="handleInput()">
+      <div id="autocompleteList"></div>
+    </div>
+    <div id="recipeResults"></div>
+  </div>
+
+  <script>
+    const recipes = [
+      {
+        name: "Baklava",
+        image: "https://www.example.com/baklava.jpg",
+        country: "Turkey",
+        vegetarian: true,
+        ingredients: ["phyllo dough", "nuts", "honey", "butter"],
+        steps: [
+          "Layer phyllo dough with melted butter and chopped nuts.",
+          "Bake until golden brown.",
+          "Pour honey syrup over the baked layers.",
+          "Let it soak before serving."
+        ]
+      },
+      {
+  name: "Mysore Pak",
+  image: "https://www.example.com/mysore-pak.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["besan (gram flour)", "ghee", "sugar", "water"],
+  steps: [
+    "Roast besan in ghee until aromatic.",
+    "Prepare sugar syrup to one-string consistency.",
+    "Mix syrup with roasted besan and pour into greased tray.",
+    "Cut into pieces once set."
+  ]
+},
+{
+  name: "Rava Kesari",
+  image: "https://www.example.com/rava-kesari.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["rava (semolina)", "ghee", "sugar", "water", "cardamom", "cashews", "raisins", "saffron"],
+  steps: [
+    "Roast rava in ghee until golden.",
+    "Boil water, add saffron and cardamom.",
+    "Add rava slowly, stirring constantly.",
+    "Add sugar and ghee; cook until thick.",
+    "Garnish with fried cashews and raisins."
+  ]
+},
+{
+  name: "Kalkandu Pongal",
+  image: "https://www.example.com/kalkandu-pongal.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice", "milk", "kalkandu (rock sugar)", "ghee", "cardamom", "cashews", "raisins"],
+  steps: [
+    "Cook rice in milk until soft.",
+    "Add crushed kalkandu and stir until dissolved.",
+    "Add ghee, cardamom, fried cashews and raisins.",
+    "Cook until thick and creamy."
+  ]
+},
+{
+  name: "Akkaravadisal",
+  image: "https://www.example.com/akkaravadisal.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice", "moong dal", "milk", "jaggery", "ghee", "cardamom", "cashews"],
+  steps: [
+    "Cook rice and dal with milk until mushy.",
+    "Melt jaggery and strain it.",
+    "Mix jaggery syrup with cooked mixture.",
+    "Add ghee, cardamom, and fried cashews."
+  ]
+},
+{
+  name: "Sakkarai Pongal",
+  image: "https://www.example.com/sakkarai-pongal.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice", "moong dal", "jaggery", "ghee", "cardamom", "cashews", "raisins"],
+  steps: [
+    "Pressure cook rice and dal together.",
+    "Melt jaggery with little water and strain.",
+    "Mix jaggery syrup with rice-dal mixture.",
+    "Add ghee, cardamom, and fried cashews & raisins."
+  ]
+},
+{
+  name: "Thengai Burfi",
+  image: "https://www.example.com/thengai-burfi.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["grated coconut", "sugar", "cardamom", "ghee"],
+  steps: [
+    "Mix coconut and sugar, heat until mixture thickens.",
+    "Add cardamom powder and ghee.",
+    "Pour into greased tray and flatten.",
+    "Cut into squares after cooling slightly."
+  ]
+},
+{
+  name: "Rava Laddu",
+  image: "https://www.example.com/rava-laddu.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["rava", "sugar", "ghee", "milk", "cardamom", "cashews", "raisins"],
+  steps: [
+    "Roast rava until aromatic and cool.",
+    "Mix with sugar and cardamom powder.",
+    "Add fried cashews, raisins, and warm milk.",
+    "Shape into laddus while warm."
+  ]
+},
+{
+  name: "Boondi Laddu",
+  image: "https://www.example.com/boondi-laddu.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["besan", "sugar", "cardamom", "ghee", "cashews", "raisins"],
+  steps: [
+    "Make boondi by frying besan batter in hot oil.",
+    "Prepare sugar syrup and mix in boondi.",
+    "Add cardamom, ghee-fried cashews and raisins.",
+    "Shape into laddus while mixture is warm."
+  ]
+},
+{
+  name: "Adhirasam",
+  image: "https://www.example.com/adhirasam.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice flour", "jaggery", "cardamom", "ghee", "oil"],
+  steps: [
+    "Melt jaggery, strain and boil to soft ball stage.",
+    "Mix with rice flour and cardamom to make dough.",
+    "Rest dough for a day, shape and flatten.",
+    "Deep fry in oil until golden brown."
+  ]
+},
+{
+  name: "Ukkarai",
+  image: "https://www.example.com/ukkarai.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["chana dal", "jaggery", "ghee", "cardamom", "cashews"],
+  steps: [
+    "Soak and steam chana dal, then grind coarsely.",
+    "Melt jaggery and cook with dal.",
+    "Add ghee and cardamom, stir till crumbly.",
+    "Garnish with fried cashews."
+  ]
+},
+{
+  name: "Ellu Urundai",
+  image: "https://www.example.com/ellu-urundai.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["black sesame seeds", "jaggery"],
+  steps: [
+    "Dry roast sesame seeds and grind coarsely.",
+    "Melt jaggery and mix with sesame.",
+    "Shape into small balls while warm."
+  ]
+},
+{
+  name: "Milk Halwa",
+  image: "https://www.example.com/milk-halwa.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["milk", "sugar", "ghee", "lemon juice", "cardamom"],
+  steps: [
+    "Boil milk and curdle with lemon juice.",
+    "Add sugar and cook till thickened.",
+    "Stir in ghee and cardamom.",
+    "Cook until halwa consistency is reached."
+  ]
+},
+{
+  name: "Paal Kozhukattai",
+  image: "https://www.example.com/paal-kozhukattai.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["rice flour", "jaggery", "coconut milk", "cardamom"],
+  steps: [
+    "Prepare small rice flour balls and steam.",
+    "Boil with coconut milk and jaggery syrup.",
+    "Simmer until slightly thick and serve warm."
+  ]
+},
+{
+  name: "Kadalai Urundai",
+  image: "https://www.example.com/kadalai-urundai.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["roasted peanuts", "jaggery"],
+  steps: [
+    "Melt jaggery to soft ball stage.",
+    "Mix roasted peanuts quickly.",
+    "Shape into balls before it cools down."
+  ]
+},
+{
+  name: "Jangiri",
+  image: "https://www.example.com/jangiri.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["urad dal", "rice flour", "sugar", "cardamom", "rose water", "ghee"],
+  steps: [
+    "Soak and grind urad dal to a fluffy batter.",
+    "Pipe batter into hot ghee in jangiri shape.",
+    "Fry until crisp, then soak in sugar syrup.",
+    "Serve once syrup is absorbed."
+  ]
+},
+{
+  name: "Maa Ladoo",
+  image: "https://www.example.com/maa-ladoo.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["roasted gram dal", "sugar", "ghee", "cardamom", "cashews"],
+  steps: [
+    "Grind roasted gram and sugar into fine powder.",
+    "Mix with cardamom and fried cashews.",
+    "Add melted ghee and shape into laddus."
+  ]
+},
+{
+  name: "Aval Kesari",
+  image: "https://www.example.com/aval-kesari.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["flattened rice (aval)", "sugar", "ghee", "cardamom", "cashews", "raisins", "food color"],
+  steps: [
+    "Roast aval, grind coarsely and cook in water.",
+    "Add sugar, food color and stir continuously.",
+    "Add ghee, cardamom, and fried nuts & raisins.",
+    "Cook until it leaves the sides of the pan."
+  ]
+},
+{
+  name: "Pasi Paruppu Payasam",
+  image: "https://www.example.com/pasi-payasam.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["moong dal", "jaggery", "coconut milk", "cardamom", "cashews", "ghee"],
+  steps: [
+    "Roast moong dal and cook until soft.",
+    "Melt jaggery and strain, mix with dal.",
+    "Add coconut milk, cardamom, and ghee-fried cashews.",
+    "Simmer and serve warm."
+  ]
+},
+{
+  name: "Panang Kalkandu Pongal",
+  image: "https://www.example.com/panang-kalkandu.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice", "milk", "palm candy (panang kalkandu)", "ghee", "cardamom", "cashews"],
+  steps: [
+    "Cook rice with milk until soft and mushy.",
+    "Add crushed palm candy and stir till dissolved.",
+    "Mix in ghee, cardamom, and fried cashews.",
+    "Serve warm as a healthy dessert."
+  ]
+},
+{
+  name: "Paal Payasam",
+  image: "https://www.example.com/paal-payasam.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw rice", "milk", "sugar", "ghee", "cardamom", "cashews", "raisins"],
+  steps: [
+    "Cook rice slowly in boiling milk.",
+    "Stir occasionally until milk thickens.",
+    "Add sugar, cardamom, and stir well.",
+    "Garnish with ghee-fried cashews and raisins."
+  ]
+},
+
+      {
+        name: "Tiramisu",
+        image: "https://www.example.com/tiramisu.jpg",
+        country: "Italy",
+        vegetarian: true,
+        ingredients: ["ladyfingers", "mascarpone", "coffee", "cocoa powder", "eggs", "sugar"],
+        steps: [
+          "Dip ladyfingers in coffee and layer in a dish.",
+          "Mix mascarpone with egg yolks and sugar.",
+          "Layer the mixture over ladyfingers.",
+          "Repeat layers and dust with cocoa powder.",
+          "Refrigerate for several hours before serving."
+        ]
+      },
+      {
+        name: "Gulab Jamun",
+        image: "https://www.example.com/gulab-jamun.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["milk powder", "flour", "sugar", "cardamom", "rose water", "ghee"],
+        steps: [
+          "Prepare dough from milk powder and flour.",
+          "Shape into small balls and deep-fry in ghee.",
+          "Soak the fried balls in sugar syrup flavored with cardamom and rose water.",
+          "Serve warm or at room temperature."
+        ]
+      },
+      {
+        name: "Mango Sticky Rice",
+        image: "https://www.example.com/mango-sticky-rice.jpg",
+        country: "Thailand",
+        vegetarian: true,
+        ingredients: ["glutinous rice", "coconut milk", "sugar", "salt", "mango"],
+        steps: [
+          "Cook glutinous rice until tender.",
+          "Mix coconut milk with sugar and salt; heat until dissolved.",
+          "Combine the coconut mixture with the cooked rice.",
+          "Serve with sliced ripe mango on top."
+        ]
+      },
+      {
+        name: "Churros",
+        image: "https://www.example.com/churros.jpg",
+        country: "Spain",
+        vegetarian: true,
+        ingredients: ["flour", "water", "salt", "sugar", "cinnamon", "oil"],
+        steps: [
+          "Prepare dough by mixing flour, water, and salt.",
+          "Pipe the dough into hot oil and fry until golden.",
+          "Roll the fried churros in a mixture of sugar and cinnamon.",
+          "Serve with chocolate dipping sauce if desired."
+        ]
+      }, {
+    name: "Churros",
+    image: "https://www.example.com/churros.jpg",
+    country: "Spain",
+    vegetarian: true,
+    ingredients: ["flour", "water", "salt", "sugar", "cinnamon", "oil"],
+    steps: [
+      "Prepare dough by mixing flour, water, and salt.",
+      "Pipe the dough into hot oil and fry until golden.",
+      "Roll the fried churros in a mixture of sugar and cinnamon.",
+      "Serve with chocolate dipping sauce if desired."
+    ]
+  },
+  {
+    name: "Baklava",
+    image: "https://www.example.com/baklava.jpg",
+    country: "Turkey",
+    vegetarian: true,
+    ingredients: ["phyllo dough", "nuts", "honey", "butter", "sugar", "cinnamon"],
+    steps: [
+      "Layer phyllo sheets with butter and chopped nuts.",
+      "Bake until golden and crisp.",
+      "Pour honey syrup over the hot baklava.",
+      "Cool before serving."
+    ]
+  },
+  {
+    name: "Tiramisu",
+    image: "https://www.example.com/tiramisu.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["mascarpone", "coffee", "ladyfingers", "cocoa powder", "sugar", "cream"],
+    steps: [
+      "Dip ladyfingers in coffee and layer them in a dish.",
+      "Mix mascarpone, sugar, and whipped cream.",
+      "Layer cream mixture over ladyfingers.",
+      "Repeat and dust with cocoa powder."
+    ]
+  },
+  {
+    name: "Pastel de Nata",
+    image: "https://www.example.com/pastel-de-nata.jpg",
+    country: "Portugal",
+    vegetarian: true,
+    ingredients: ["puff pastry", "egg yolks", "sugar", "milk", "vanilla", "cinnamon"],
+    steps: [
+      "Line muffin tins with puff pastry.",
+      "Make custard from milk, sugar, and yolks.",
+      "Fill pastry with custard and bake.",
+      "Serve slightly warm with cinnamon."
+    ]
+  },
+  {
+    name: "Mochi",
+    image: "https://www.example.com/mochi.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["glutinous rice flour", "sugar", "water", "cornstarch", "red bean paste"],
+    steps: [
+      "Mix rice flour with water and sugar.",
+      "Steam until sticky and pliable.",
+      "Dust with cornstarch and flatten into circles.",
+      "Fill with red bean paste and seal."
+    ]
+  },
+  {
+    name: "Brigadeiro",
+    image: "https://www.example.com/brigadeiro.jpg",
+    country: "Brazil",
+    vegetarian: true,
+    ingredients: ["condensed milk", "cocoa powder", "butter", "chocolate sprinkles"],
+    steps: [
+      "Cook condensed milk, cocoa, and butter until thick.",
+      "Cool the mixture and shape into balls.",
+      "Roll in chocolate sprinkles.",
+      "Chill before serving."
+    ]
+  },
+  {
+    name: "Tres Leches Cake",
+    image: "https://www.example.com/tres-leches.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["flour", "eggs", "milk", "condensed milk", "evaporated milk", "sugar", "vanilla"],
+    steps: [
+      "Bake a light sponge cake.",
+      "Poke holes and pour three types of milk over the cake.",
+      "Let it absorb the milk.",
+      "Top with whipped cream and chill."
+    ]
+  },
+  {
+    name: "Coconut Macaroons",
+    image: "https://www.example.com/macaroons.jpg",
+    country: "France",
+    vegetarian: true,
+    ingredients: ["coconut", "condensed milk", "vanilla", "egg whites"],
+    steps: [
+      "Mix coconut, condensed milk, and vanilla.",
+      "Fold in whipped egg whites.",
+      "Scoop onto baking tray and bake until golden.",
+      "Cool before serving."
+    ]
+  },
+  {
+    name: "Rice Pudding (Arroz con Leche)",
+    image: "https://www.example.com/arroz-con-leche.jpg",
+    country: "Spain",
+    vegetarian: true,
+    ingredients: ["rice", "milk", "sugar", "cinnamon", "lemon zest"],
+    steps: [
+      "Cook rice with milk and lemon zest.",
+      "Add sugar and cinnamon.",
+      "Simmer until creamy.",
+      "Serve warm or cold."
+    ]
+  },
+  {
+    name: "Banoffee Pie",
+    image: "https://www.example.com/banoffee-pie.jpg",
+    country: "UK",
+    vegetarian: true,
+    ingredients: ["bananas", "toffee", "cream", "biscuits", "butter"],
+    steps: [
+      "Make a biscuit base with crushed biscuits and butter.",
+      "Spread toffee over the base.",
+      "Top with banana slices and whipped cream.",
+      "Chill before serving."
+    ]
+  }
+      // Add 20 more dessert objects here with similar structure
+    ];
+
+    const allIngredients = [...new Set(recipes.flatMap(r => r.ingredients))];
+
+    function handleInput() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase();
+      const suggestions = allIngredients.filter(ing => ing.startsWith(input));
+      const autoList = document.getElementById("autocompleteList");
+
+      autoList.innerHTML = "";
+      suggestions.forEach(s => {
+        const item = document.createElement("div");
+        item.className = "autocomplete-item";
+        item.textContent = s;
+        item.onclick = () => {
+          document.getElementById("ingredientInput").value = s;
+          autoList.innerHTML = "";
+          searchRecipes();
+        };
+        autoList.appendChild(item);
+      });
+
+      searchRecipes();
+    }
+
+    function searchRecipes() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase().split(',').map(i => i.trim());
+      const resultDiv = document.getElementById("recipeResults");
+      resultDiv.innerHTML = "";
+
+      const filtered = recipes.filter(recipe =>
+        input.some(ing => recipe.ingredients.includes(ing))
+      );
+
+      filtered.forEach(recipe => {
+        const card = document.createElement("div");
+        card.classList.add("recipe-card");
+        card.innerHTML = `
+          <img src="${recipe.image}" alt="${recipe.name}">
+          <h3>${recipe.name} (${recipe.country})</h3>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
+          <div class="steps">
+            <strong>Steps:</strong>
+            <ol>${recipe.steps.map(step => `<li>${step}</li>`).join("")}</ol>
+          </div>
+        `;
+        resultDiv.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

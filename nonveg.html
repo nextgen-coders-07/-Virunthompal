@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virunthompal - Non-Vegetarian Recipe Search</title>
+  <link rel="icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  </head>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      height: 100vh;
+    }
+
+    nav {
+      width: 250px;
+      background: #ffffff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1rem;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: #4a90e2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #eaf1f8;
+      color: #4a90e2;
+    }
+
+    .main {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    #ingredientInput {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    #autocompleteList {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+    }
+
+    .autocomplete-item {
+      padding: 0.75rem;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+
+    .recipe-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .recipe-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    .recipe-card h3 {
+      color: #4a90e2;
+      margin-bottom: 0.5rem;
+    }
+
+    .steps ol {
+      padding-left: 1.5rem;
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      padding: 1rem;
+      background: #4a90e2;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    body.dark {
+      background: #1e1e1e;
+      color: #eee;
+    }
+
+    body.dark nav {
+      background: #2c2c2c;
+    }
+
+    body.dark .main {
+      background: #1e1e1e;
+    }
+
+    body.dark #ingredientInput,
+    body.dark .recipe-card,
+    body.dark #autocompleteList {
+      background: #2c2c2c;
+      color: #eee;
+      border: 1px solid #555;
+    }
+
+    body.dark .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Virunthompal</div>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\about.html" class="nav-item"><i class="fas fa-user"></i><span>About Us</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\contact.html" class="nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+  </nav>
+
+  <div class="main">
+    <div class="search-box">
+      <input type="text" id="ingredientInput" placeholder="Type ingredients (e.g. chicken, beef)" oninput="handleInput()">
+      <div id="autocompleteList"></div>
+    </div>
+    <div id="recipeResults"></div>
+  </div>
+
+  <script>
+    const recipes = [
+  {
+    name: "Chicken Curry",
+    image: "https://www.example.com/chicken-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "onion", "tomato", "spices", "garlic", "ginger"],
+    steps: [
+      "Heat oil, add onions and sauté.",
+      "Add chicken and cook until browned.",
+      "Add tomatoes, spices, and simmer until cooked.",
+      "Serve with rice or bread."
+    ]
+  },
+  {
+    name: "Fish Fry",
+    image: "https://www.example.com/fish-fry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["fish", "turmeric", "chili powder", "garlic", "curry leaves"],
+    steps: [
+      "Marinate fish with spices.",
+      "Fry the fish until golden brown.",
+      "Serve with sauce or as a side."
+    ]
+  },
+  {
+    name: "Mutton Biryani",
+    image: "https://www.example.com/mutton-biryani.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["mutton", "rice", "onion", "tomato", "yogurt", "spices"],
+    steps: [
+      "Cook mutton with spices and onion.",
+      "Layer cooked rice on top of mutton.",
+      "Simmer until rice is cooked and flavors are absorbed.",
+      "Serve with raita."
+    ]
+  },
+  {
+    name: "Butter Chicken",
+    image: "https://www.example.com/butter-chicken.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "butter", "cream", "tomato", "garlic", "spices"],
+    steps: [
+      "Cook chicken in a rich butter sauce with garlic and spices.",
+      "Add cream and cook until the sauce thickens.",
+      "Serve with naan or rice."
+    ]
+  },
+  {
+    name: "Grilled Salmon",
+    image: "https://www.example.com/grilled-salmon.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["salmon", "lemon", "garlic", "olive oil", "herbs"],
+    steps: [
+      "Marinate salmon with lemon, garlic, and herbs.",
+      "Grill until cooked to your desired doneness.",
+      "Serve with steamed vegetables or a side salad."
+    ]
+  },
+  {
+    name: "Prawn Masala",
+    image: "https://www.example.com/prawn-masala.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["prawns", "onion", "tomato", "garlic", "spices", "coriander"],
+    steps: [
+      "Cook prawns with onions, tomatoes, and spices.",
+      "Simmer to blend flavors.",
+      "Serve hot with rice or bread."
+    ]
+  },
+  {
+    name: "Beef Stew",
+    image: "https://www.example.com/beef-stew.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["beef", "carrot", "potato", "onion", "spices"],
+    steps: [
+      "Brown beef in a pot, add vegetables and spices.",
+      "Simmer for hours until beef is tender.",
+      "Serve with crusty bread."
+    ]
+  },
+  {
+    name: "Lamb Kebab",
+    image: "https://www.example.com/lamb-kebab.jpg",
+    country: "Middle East",
+    vegetarian: false,
+    ingredients: ["lamb", "onion", "garlic", "spices", "parsley"],
+    steps: [
+      "Mix ground lamb with spices and herbs.",
+      "Form into patties and grill until cooked through.",
+      "Serve with pita bread and a side salad."
+    ]
+  },
+  {
+    name: "Chicken Tikka",
+    image: "https://www.example.com/chicken-tikka.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "yogurt", "garlic", "ginger", "spices"],
+    steps: [
+      "Marinate chicken in yogurt and spices.",
+      "Grill or bake until cooked.",
+      "Serve with naan and chutney."
+    ]
+  },
+  {
+    name: "Pork Adobo",
+    image: "https://www.example.com/pork-adobo.jpg",
+    country: "Philippines",
+    vegetarian: false,
+    ingredients: ["pork", "soy sauce", "garlic", "vinegar", "bay leaves"],
+    steps: [
+      "Marinate pork in soy sauce, garlic, and vinegar.",
+      "Simmer with bay leaves until tender.",
+      "Serve with rice."
+    ]
+  },
+  {
+    name: "Shrimp Scampi",
+    image: "https://www.example.com/shrimp-scampi.jpg",
+    country: "Italy",
+    vegetarian: false,
+    ingredients: ["shrimp", "garlic", "lemon", "butter", "parsley"],
+    steps: [
+      "Sauté shrimp in butter and garlic.",
+      "Add lemon juice and parsley.",
+      "Serve with pasta."
+    ]
+  },
+  {
+    name: "Chicken Shawarma",
+    image: "https://www.example.com/chicken-shawarma.jpg",
+    country: "Middle East",
+    vegetarian: false,
+    ingredients: ["chicken", "garlic", "yogurt", "spices", "pita bread"],
+    steps: [
+      "Marinate chicken with garlic, yogurt, and spices.",
+      "Grill and slice the chicken.",
+      "Serve in pita with veggies and sauces."
+    ]
+  },
+  {
+    name: "Crab Cakes",
+    image: "https://www.example.com/crab-cakes.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["crab", "bread crumbs", "egg", "onion", "spices"],
+    steps: [
+      "Mix crab with bread crumbs, egg, and spices.",
+      "Form into patties and fry until golden.",
+      "Serve with tartar sauce."
+    ]
+  },
+  {
+    name: "Bacon-wrapped Chicken",
+    image: "https://www.example.com/bacon-wrapped-chicken.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["chicken", "bacon", "garlic", "cheese"],
+    steps: [
+      "Wrap chicken breasts in bacon.",
+      "Bake until bacon is crispy and chicken is cooked.",
+      "Serve with mashed potatoes."
+    ]
+  },
+  {
+    name: "Fish Tacos",
+    image: "https://www.example.com/fish-tacos.jpg",
+    country: "Mexico",
+    vegetarian: false,
+    ingredients: ["fish", "taco shells", "cabbage", "lime", "sour cream"],
+    steps: [
+      "Fry or grill fish fillets.",
+      "Serve in taco shells with cabbage and sour cream.",
+      "Top with lime and cilantro."
+    ]
+  },
+  {
+    name: "Chicken Caesar Salad",
+    image: "https://www.example.com/chicken-caesar-salad.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["chicken", "lettuce", "croutons", "parmesan", "Caesar dressing"],
+    steps: [
+      "Grill chicken and slice it.",
+      "Toss lettuce with croutons and dressing.",
+      "Top with sliced chicken and parmesan."
+    ]
+  },
+  {
+    name: "Beef Tacos",
+    image: "https://www.example.com/beef-tacos.jpg",
+    country: "Mexico",
+    vegetarian: false,
+    ingredients: ["beef", "taco shells", "onion", "lettuce", "cheese"],
+    steps: [
+      "Cook beef with taco seasoning.",
+      "Fill taco shells with beef and toppings.",
+      "Serve with salsa."
+    ]
+  },
+  {
+    name: "BBQ Ribs",
+    image: "https://www.example.com/bbq-ribs.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["ribs", "BBQ sauce", "garlic", "onion powder", "paprika"],
+    steps: [
+      "Season ribs with spices.",
+      "Cook on a grill or in the oven, basting with BBQ sauce.",
+      "Serve with coleslaw and cornbread."
+    ]
+  },
+  {
+    name: "Beef Wellington",
+    image: "https://www.example.com/beef-wellington.jpg",
+    country: "UK",
+    vegetarian: false,
+    ingredients: ["beef", "mushrooms", "puff pastry", "egg"],
+    steps: [
+      "Sear beef and coat with mushroom mixture.",
+      "Wrap in puff pastry and bake.",
+      "Serve with roasted vegetables."
+    ]
+  },
+  {
+    name: "Duck Confit",
+    image: "https://www.example.com/duck-confit.jpg",
+    country: "France",
+    vegetarian: false,
+    ingredients: ["duck", "garlic", "thyme", "duck fat"],
+    steps: [
+      "Slow cook duck in its fat until tender.",
+      "Crisp skin in a hot pan.",
+      "Serve with potatoes or vegetables."
+    ]
+  },
+  {
+    name: "Chili Con Carne",
+    image: "https://www.example.com/chili-con-carne.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["ground beef", "beans", "tomato", "chili powder", "onion"],
+    steps: [
+      "Brown ground beef with onions.",
+      "Add beans, tomatoes, and spices.",
+      "Simmer until flavors are melded."
+    ]
+  },
+  {
+    name: "Korean BBQ",
+    image: "https://www.example.com/korean-bbq.jpg",
+    country: "Korea",
+    vegetarian: false,
+    ingredients: ["beef", "soy sauce", "garlic", "sesame oil", "onion"],
+    steps: [
+      "Marinate beef in soy sauce and spices.",
+      "Grill the beef and serve with kimchi."
+    ]
+  },
+  {
+    name: "Lobster Roll",
+    image: "https://www.example.com/lobster-roll.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["lobster", "mayonnaise", "celery", "buns"],
+    steps: [
+      "Mix lobster with mayonnaise and celery.",
+      "Serve in a buttered roll."
+    ]
+  },
+  {
+    name: "Chicken Fried Steak",
+    image: "https://www.example.com/chicken-fried-steak.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["beef steak", "flour", "buttermilk", "spices", "gravy"],
+    steps: [
+      "Dredge steak in seasoned flour and buttermilk.",
+      "Fry until golden and crispy.",
+      "Serve with gravy and mashed potatoes."
+    ]
+  },{
+    name: "Chicken Curry",
+    image: "https://www.example.com/chicken-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "onion", "tomato", "spices", "garlic", "ginger"],
+    steps: [
+      "Heat oil, add onions and sauté.",
+      "Add chicken and cook until browned.",
+      "Add tomatoes, spices, and simmer until cooked.",
+      "Serve with rice or bread."
+    ]
+  },
+  {
+    name: "Fish Fry",
+    image: "https://www.example.com/fish-fry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["fish", "turmeric", "chili powder", "garlic", "curry leaves"],
+    steps: [
+      "Marinate fish with spices.",
+      "Fry the fish until golden brown.",
+      "Serve with sauce or as a side."
+    ]
+  },
+  {
+    name: "Mutton Biryani",
+    image: "https://www.example.com/mutton-biryani.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["mutton", "rice", "onion", "garlic", "spices", "yogurt"],
+    steps: [
+      "Marinate mutton with spices and yogurt.",
+      "Cook rice separately.",
+      "Layer the mutton and rice, cook until done.",
+      "Serve with raita."
+    ]
+  },
+  {
+    name: "Butter Chicken",
+    image: "https://www.example.com/butter-chicken.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "butter", "cream", "tomato", "garlic", "ginger"],
+    steps: [
+      "Cook chicken pieces in butter.",
+      "Prepare the creamy tomato gravy.",
+      "Add chicken to the gravy and simmer.",
+      "Serve with naan or rice."
+    ]
+  },
+  {
+    name: "Tandoori Chicken",
+    image: "https://www.example.com/tandoori-chicken.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "yogurt", "tandoori masala", "garlic", "lemon juice"],
+    steps: [
+      "Marinate chicken in yogurt and spices.",
+      "Grill the chicken until cooked.",
+      "Serve with onions and chutney."
+    ]
+  },
+  {
+    name: "Prawn Masala",
+    image: "https://www.example.com/prawn-masala.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["prawns", "onion", "tomato", "garlic", "ginger", "spices"],
+    steps: [
+      "Sauté onions, garlic, and ginger.",
+      "Add prawns and cook until pink.",
+      "Simmer in a tomato-based gravy.",
+      "Serve with rice or chapati."
+    ]
+  },
+  {
+    name: "Chicken Tikka",
+    image: "https://www.example.com/chicken-tikka.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "yogurt", "spices", "lemon juice", "garlic"],
+    steps: [
+      "Marinate chicken in yogurt and spices.",
+      "Grill the chicken until charred.",
+      "Serve with naan and chutney."
+    ]
+  },
+  {
+    name: "Lamb Korma",
+    image: "https://www.example.com/lamb-korma.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["lamb", "onion", "cashew nuts", "yogurt", "garlic", "spices"],
+    steps: [
+      "Cook lamb with spices and cashew nuts.",
+      "Add yogurt and simmer until tender.",
+      "Serve with rice or naan."
+    ]
+  },
+  {
+    name: "Fish Curry",
+    image: "https://www.example.com/fish-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["fish", "onion", "tomato", "spices", "coconut milk"],
+    steps: [
+      "Sauté onions and tomatoes with spices.",
+      "Add fish pieces and cook.",
+      "Pour in coconut milk and simmer.",
+      "Serve with steamed rice."
+    ]
+  },
+  {
+    name: "Keema Matar",
+    image: "https://www.example.com/keema-matar.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["minced meat", "peas", "onion", "garlic", "spices"],
+    steps: [
+      "Cook minced meat with onions and garlic.",
+      "Add peas and cook until tender.",
+      "Serve with naan or rice."
+    ]
+  },
+  {
+    name: "Chicken Shawarma",
+    image: "https://www.example.com/chicken-shawarma.jpg",
+    country: "Middle East",
+    vegetarian: false,
+    ingredients: ["chicken", "garlic", "yogurt", "spices", "pita bread"],
+    steps: [
+      "Marinate chicken in garlic, yogurt, and spices.",
+      "Grill chicken until cooked.",
+      "Serve in pita bread with vegetables."
+    ]
+  },
+  {
+    name: "Beef Stew",
+    image: "https://www.example.com/beef-stew.jpg",
+    country: "Ireland",
+    vegetarian: false,
+    ingredients: ["beef", "carrot", "onion", "potatoes", "spices"],
+    steps: [
+      "Brown beef in a pot.",
+      "Add vegetables and simmer with broth.",
+      "Serve with crusty bread."
+    ]
+  },
+  {
+    name: "Chicken Wings",
+    image: "https://www.example.com/chicken-wings.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["chicken wings", "barbecue sauce", "spices"],
+    steps: [
+      "Marinate chicken wings in barbecue sauce.",
+      "Grill or bake until crispy.",
+      "Serve with ranch or blue cheese dressing."
+    ]
+  },
+  {
+    name: "Crab Curry",
+    image: "https://www.example.com/crab-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["crab", "onion", "garlic", "ginger", "spices", "coconut milk"],
+    steps: [
+      "Sauté onions, garlic, and ginger.",
+      "Add crab and cook in coconut milk and spices.",
+      "Simmer and serve with rice."
+    ]
+  },
+  {
+    name: "Duck Curry",
+    image: "https://www.example.com/duck-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["duck", "onion", "tomato", "garlic", "ginger", "spices"],
+    steps: [
+      "Sauté onions, garlic, and ginger.",
+      "Add duck and cook until browned.",
+      "Add spices and simmer until tender.",
+      "Serve with rice."
+    ]
+  },
+  {
+    name: "Pork Vindaloo",
+    image: "https://www.example.com/pork-vindaloo.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["pork", "vinegar", "spices", "garlic", "ginger"],
+    steps: [
+      "Marinate pork with vinegar and spices.",
+      "Cook pork with onions and garlic.",
+      "Serve with rice."
+    ]
+  },
+  {
+    name: "Mussels Masala",
+    image: "https://www.example.com/mussels-masala.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["mussels", "onion", "tomato", "garlic", "spices"],
+    steps: [
+      "Sauté onions, garlic, and spices.",
+      "Add mussels and cook until they open.",
+      "Serve with naan."
+    ]
+  },
+  {
+    name: "Chicken 65",
+    image: "https://www.example.com/chicken-65.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "yogurt", "spices", "curry leaves", "green chilies"],
+    steps: [
+      "Marinate chicken in yogurt and spices.",
+      "Deep fry chicken pieces until crispy.",
+      "Garnish with curry leaves and green chilies."
+    ]
+  },
+  {
+    name: "Chicken Pakora",
+    image: "https://www.example.com/chicken-pakora.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "besan", "spices", "onion", "garlic"],
+    steps: [
+      "Marinate chicken in spices.",
+      "Coat in a gram flour batter and fry.",
+      "Serve with chutney."
+    ]
+  },
+  {
+    name: "Goan Fish Curry",
+    image: "https://www.example.com/goan-fish-curry.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["fish", "coconut milk", "onion", "garlic", "spices"],
+    steps: [
+      "Cook fish in a coconut milk gravy with spices.",
+      "Simmer and serve with rice."
+    ]
+  },
+  {
+    name: "Baked Salmon",
+    image: "https://www.example.com/baked-salmon.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["salmon", "lemon", "garlic", "butter", "herbs"],
+    steps: [
+      "Season salmon with garlic, lemon, and herbs.",
+      "Bake until cooked through.",
+      "Serve with vegetables."
+    ]
+  },
+  {
+    name: "Fish Tacos",
+    image: "https://www.example.com/fish-tacos.jpg",
+    country: "Mexico",
+    vegetarian: false,
+    ingredients: ["fish", "taco shells", "cabbage", "avocado", "lime"],
+    steps: [
+      "Grill fish and assemble in taco shells.",
+      "Top with cabbage, avocado, and lime juice."
+    ]
+  },
+  {
+    name: "Chicken Tikka Masala",
+    image: "https://www.example.com/chicken-tikka-masala.jpg",
+    country: "India",
+    vegetarian: false,
+    ingredients: ["chicken", "yogurt", "onions", "tomatoes", "garlic", "ginger", "cumin", "coriander", "garam masala", "chili powder", "cream", "cilantro"],
+    steps: [
+      "Marinate chicken in yogurt and spices.",
+      "Grill chicken pieces until cooked.",
+      "Prepare sauce by sautéing onions, garlic, and spices.",
+      "Add tomatoes, cream, and cooked chicken to the sauce.",
+      "Simmer and serve with rice or naan."
+    ]
+  },
+  {
+    name: "Beef Wellington",
+    image: "https://www.example.com/beef-wellington.jpg",
+    country: "UK",
+    vegetarian: false,
+    ingredients: ["beef fillet", "puff pastry", "mushrooms", "prosciutto", "mustard", "egg", "garlic", "onion", "butter", "thyme", "flour"],
+    steps: [
+      "Sear beef fillet and coat with mustard.",
+      "Sauté mushrooms and garlic, and wrap beef in prosciutto.",
+      "Encase in puff pastry and bake until golden.",
+      "Serve with gravy or sauce of choice."
+    ]
+  },
+  {
+    name: "Paella",
+    image: "https://www.example.com/paella.jpg",
+    country: "Spain",
+    vegetarian: false,
+    ingredients: ["chicken", "seafood", "saffron", "tomatoes", "onions", "bell peppers", "garlic", "peas", "rice", "olive oil", "broth", "paprika"],
+    steps: [
+      "Sauté chicken, seafood, and vegetables.",
+      "Add rice and saffron, and cook in broth until tender.",
+      "Simmer until rice absorbs all the liquid and flavors.",
+      "Serve with a wedge of lemon."
+    ]
+  },
+  {
+    name: "Fish and Chips",
+    image: "https://www.example.com/fish-and-chips.jpg",
+    country: "UK",
+    vegetarian: false,
+    ingredients: ["cod", "potatoes", "flour", "beer", "baking powder", "salt", "pepper", "vegetable oil", "vinegar", "lemon", "tartar sauce"],
+    steps: [
+      "Prepare batter with flour, baking powder, beer, and seasonings.",
+      "Dip fish fillets in batter and fry until golden.",
+      "Fry potato chips and serve with fish, tartar sauce, vinegar, and lemon."
+    ]
+  },
+  {
+    name: "Tacos al Pastor",
+    image: "https://www.example.com/tacos-al-pastor.jpg",
+    country: "Mexico",
+    vegetarian: false,
+    ingredients: ["pork", "pineapple", "onions", "cilantro", "chili powder", "garlic", "lime", "oregano", "taco tortillas", "vinegar", "bay leaves", "annatto paste"],
+    steps: [
+      "Marinate pork with spices and pineapple juice.",
+      "Grill pork and pineapple together.",
+      "Shred the pork and serve in tacos with cilantro, onions, and lime."
+    ]
+  },
+  {
+    name: "Sushi (Nigiri and Sashimi)",
+    image: "https://www.example.com/sushi.jpg",
+    country: "Japan",
+    vegetarian: false,
+    ingredients: ["sushi rice", "fish (salmon, tuna)", "wasabi", "nori", "soy sauce", "vinegar", "sugar", "salt", "pickled ginger", "sesame seeds", "green onions"],
+    steps: [
+      "Prepare sushi rice with vinegar, sugar, and salt.",
+      "Slice fish into thin pieces and serve on top of rice or as sashimi.",
+      "Serve with soy sauce, wasabi, and pickled ginger."
+    ]
+  },
+  {
+    name: "Chicken Shawarma",
+    image: "https://www.example.com/chicken-shawarma.jpg",
+    country: "Lebanon",
+    vegetarian: false,
+    ingredients: ["chicken", "garlic", "yogurt", "lemon", "cumin", "coriander", "turmeric", "paprika", "cinnamon", "olive oil", "pita bread", "tahini"],
+    steps: [
+      "Marinate chicken with garlic, yogurt, and spices.",
+      "Grill chicken on skewers or in a rotisserie.",
+      "Serve in pita bread with tahini, tomatoes, and onions."
+    ]
+  },
+  {
+    name: "Lamb Kofta",
+    image: "https://www.example.com/lamb-kofta.jpg",
+    country: "Middle East",
+    vegetarian: false,
+    ingredients: ["lamb", "onions", "garlic", "parsley", "cumin", "coriander", "cinnamon", "paprika", "mint", "olive oil", "lemon", "salt"],
+    steps: [
+      "Mix ground lamb with spices, garlic, onions, and herbs.",
+      "Shape into kofta and grill until cooked.",
+      "Serve with flatbread, yogurt, and cucumber salad."
+    ]
+  },
+  {
+    name: "Peking Duck",
+    image: "https://www.example.com/peking-duck.jpg",
+    country: "China",
+    vegetarian: false,
+    ingredients: ["duck", "honey", "soy sauce", "ginger", "garlic", "scallions", "cucumber", "hoisin sauce", "Chinese pancakes", "rice vinegar", "five-spice powder"],
+    steps: [
+      "Roast the duck until skin is crispy.",
+      "Serve with pancakes, hoisin sauce, and sliced vegetables."
+    ]
+  },
+  {
+    name: "Moules Frites",
+    image: "https://www.example.com/moules-frites.jpg",
+    country: "Belgium",
+    vegetarian: false,
+    ingredients: ["mussels", "garlic", "onions", "white wine", "butter", "parsley", "lemon", "bay leaves", "thyme", "potatoes", "salt", "pepper"],
+    steps: [
+      "Steam mussels with garlic, onions, and white wine.",
+      "Serve with crispy fries and lemon wedges.",
+      "Garnish with fresh parsley."
+    ]
+  },
+  {
+    name: "Tom Yum Goong",
+    image: "https://www.example.com/tom-yum-goong.jpg",
+    country: "Thailand",
+    vegetarian: false,
+    ingredients: ["prawns", "lemongrass", "lime leaves", "chili", "galangal", "fish sauce", "tomatoes", "mushrooms", "coriander", "lime", "sugar", "water"],
+    steps: [
+      "Boil water with lemongrass, lime leaves, and galangal.",
+      "Add prawns, mushrooms, and tomatoes.",
+      "Season with fish sauce, lime, and sugar.",
+      "Garnish with coriander and serve hot."
+    ]
+  },
+  {
+    name: "Boeuf Bourguignon",
+    image: "https://www.example.com/boeuf-bourguignon.jpg",
+    country: "France",
+    vegetarian: false,
+    ingredients: ["beef", "red wine", "onions", "garlic", "carrots", "mushrooms", "tomato paste", "thyme", "bay leaves", "bacon", "butter", "flour"],
+    steps: [
+      "Brown beef and bacon, then sauté vegetables.",
+      "Simmer beef in red wine with herbs and stock.",
+      "Add mushrooms and cook until tender.",
+      "Serve with mashed potatoes or bread."
+    ]
+  },
+  {
+    name: "Arroz con Pollo",
+    image: "https://www.example.com/arroz-con-pollo.jpg",
+    country: "Cuba",
+    vegetarian: false,
+    ingredients: ["chicken", "rice", "tomatoes", "bell peppers", "garlic", "onions", "peas", "chicken broth", "saffron", "olive oil", "oregano", "cumin"],
+    steps: [
+      "Brown chicken and sauté vegetables.",
+      "Add rice, chicken broth, and seasonings.",
+      "Simmer until rice is cooked and chicken is tender.",
+      "Serve with a squeeze of lime."
+    ]
+  },
+  {
+    name: "Lobster Roll",
+    image: "https://www.example.com/lobster-roll.jpg",
+    country: "USA",
+    vegetarian: false,
+    ingredients: ["lobster meat", "butter", "mayonnaise", "celery", "lemon", "dill", "chives", "salt", "pepper", "hot dog bun"],
+    steps: [
+      "Cook lobster and chop into pieces.",
+      "Mix lobster with mayo, butter, and seasonings.",
+      "Serve in a toasted bun with fresh herbs."
+    ]
+  },
+  {
+    name: "Chicken Adobo",
+    image: "https://www.example.com/chicken-adobo.jpg",
+    country: "Philippines",
+    vegetarian: false,
+    ingredients: ["chicken", "soy sauce", "vinegar", "garlic", "bay leaves", "peppercorns", "onions", "potatoes", "sugar", "water", "coconut oil", "ginger"],
+    steps: [
+      "Marinate chicken in soy sauce and vinegar.",
+      "Simmer with garlic, onions, and bay leaves.",
+      "Serve with rice and crispy potatoes."
+    ]
+  },
+  {
+    name: "Fried Calamari",
+    image: "https://www.example.com/fried-calamari.jpg",
+    country: "Italy",
+    vegetarian: false,
+    ingredients: ["squid", "flour", "cornstarch", "garlic", "lemon", "parsley", "olive oil", "salt", "pepper", "egg", "breadcrumbs"],
+    steps: [
+      "Dredge squid in seasoned flour and egg.",
+      "Fry in hot oil until golden and crispy.",
+      "Serve with lemon wedges and parsley."
+    ]
+  },
+  {
+    name: "Chimichurri Steak",
+    image: "https://www.example.com/chimichurri-steak.jpg",
+    country: "Argentina",
+    vegetarian: false,
+    ingredients: ["steak", "parsley", "garlic", "red wine vinegar", "olive oil", "oregano", "chili flakes", "salt", "pepper", "lime", "onions", "cumin"],
+    steps: [
+      "Grill steak to desired doneness.",
+      "Mix chimichurri sauce with parsley, garlic, vinegar, and oil.",
+      "Serve steak with chimichurri sauce on top."
+    ]
+  },
+  {
+    name: "Sauerbraten",
+    image: "https://www.example.com/sauerbraten.jpg",
+    country: "Germany",
+    vegetarian: false,
+    ingredients: ["beef", "onions", "vinegar", "wine", "sugar", "cloves", "bay leaves", "ginger snaps", "carrots", "potatoes", "stock", "salt"],
+    steps: [
+      "Marinate beef in vinegar, wine, and spices for several days.",
+      "Slow cook beef with onions, carrots, and stock.",
+      "Serve with potatoes or dumplings."
+    ]
+  },
+  {
+    name: "Tempura",
+    image: "https://www.example.com/tempura.jpg",
+    country: "Japan",
+    vegetarian: false,
+    ingredients: ["shrimp", "vegetables", "flour", "egg", "cornstarch", "water", "baking soda", "soy sauce", "salt", "pepper", "dashi", "sesame oil"],
+    steps: [
+      "Prepare batter with flour, egg, cornstarch, and water.",
+      "Dip shrimp and vegetables into batter and fry until crispy.",
+      "Serve with soy sauce or tempura dipping sauce."
+    ]
+  },
+  {
+    name: "Rendang",
+    image: "https://www.example.com/rendang.jpg",
+    country: "Indonesia",
+    vegetarian: false,
+    ingredients: ["beef", "coconut milk", "lemongrass", "ginger", "garlic", "chilies", "coriander", "turmeric", "cumin", "cinnamon", "bay leaves", "sugar"],
+    steps: [
+      "Cook beef with coconut milk and spices until tender.",
+      "Simmer until sauce thickens and beef absorbs the flavors.",
+      "Serve with steamed rice."
+    ]
+  },
+  {
+    name: "Lobster Bisque",
+    image: "https://www.example.com/lobster-bisque.jpg",
+    country: "France",
+    vegetarian: false,
+    ingredients: ["lobster", "cream", "garlic", "onion", "wine"],
+    steps: [
+      "Cook lobster and make a creamy broth.",
+      "Puree the mixture and serve hot."
+    ]
+  }
+  // Additional 25 recipes can be added here...
+];
+
+console.log(recipes);
+
+
+    const allIngredients = [...new Set(recipes.flatMap(r => r.ingredients))];
+
+    function handleInput() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase();
+      const suggestions = allIngredients.filter(ing => ing.startsWith(input));
+      const autoList = document.getElementById("autocompleteList");
+
+      autoList.innerHTML = "";
+      suggestions.forEach(s => {
+        const item = document.createElement("div");
+        item.className = "autocomplete-item";
+        item.textContent = s;
+        item.onclick = () => {
+          document.getElementById("ingredientInput").value = s;
+          autoList.innerHTML = "";
+          searchRecipes();
+        };
+        autoList.appendChild(item);
+      });
+
+      searchRecipes();
+    }
+
+    function searchRecipes() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase().split(',').map(i => i.trim());
+      const resultDiv = document.getElementById("recipeResults");
+      resultDiv.innerHTML = "";
+
+      const filtered = recipes.filter(recipe =>
+        !recipe.vegetarian &&
+        input.some(ing => recipe.ingredients.includes(ing))
+      );
+
+      filtered.forEach(recipe => {
+        const card = document.createElement("div");
+        card.classList.add("recipe-card");
+        card.innerHTML = `
+          <img src="${recipe.image}" alt="${recipe.name}">
+          <h3>${recipe.name} (${recipe.country})</h3>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
+          <div class="steps">
+            <strong>Steps:</strong>
+            <ol>${recipe.steps.map(step => `<li>${step}</li>`).join("")}</ol>
+          </div>
+        `;
+        resultDiv.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

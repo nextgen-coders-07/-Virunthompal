@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virunthompal - Recipe Search</title>
+  <link rel="icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  </head>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      height: 100vh;
+    }
+
+    nav {
+      width: 250px;
+      background: #ffffff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1rem;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: #4a90e2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #eaf1f8;
+      color: #4a90e2;
+    }
+
+    .main {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    #ingredientInput {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    #autocompleteList {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+    }
+
+    .autocomplete-item {
+      padding: 0.75rem;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+
+    .recipe-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .recipe-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    .recipe-card h3 {
+      color: #4a90e2;
+      margin-bottom: 0.5rem;
+    }
+
+    .steps ol {
+      padding-left: 1.5rem;
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      padding: 1rem;
+      background: #4a90e2;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    body.dark {
+      background: #1e1e1e;
+      color: #eee;
+    }
+
+    body.dark nav {
+      background: #2c2c2c;
+    }
+
+    body.dark .main {
+      background: #1e1e1e;
+    }
+
+    body.dark #ingredientInput,
+    body.dark .recipe-card,
+    body.dark #autocompleteList {
+      background: #2c2c2c;
+      color: #eee;
+      border: 1px solid #555;
+    }
+
+    body.dark .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Virunthompal</div>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\about.html" class="nav-item"><i class="fas fa-user"></i><span>About Us</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\contact.html" class="nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+ 
+
+  </nav>
+
+  <div class="main">
+    <div class="search-box">
+      <input type="text" id="ingredientInput" placeholder="Type ingredients (e.g. tomato, onion)" oninput="handleInput()">
+      <div id="autocompleteList"></div>
+    </div>
+    <div id="recipeResults"></div>
+  </div>
+
+  <script>
+    const recipes = [
+  {
+    name: "Carrot Poriyal",
+    image: "https://www.ticklingpalates.com/wp-content/uploads/2015/12/Carrot-Poriyal.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["carrot", "mustard seeds", "onion", "green chili", "curry leaves"],
+    steps: [
+      "Chop carrots finely.",
+      "Heat oil, add mustard seeds.",
+      "Add chopped onions, curry leaves, green chili.",
+      "Add carrots and cook until soft.",
+      "Serve hot."
+    ]
+  },
+  {
+    name: "Sambar",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2021/07/sambar-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["toor dal", "tamarind", "sambar powder", "onion", "tomato", "mustard seeds", "curry leaves"],
+    steps: [
+      "Boil toor dal until soft.",
+      "Add tamarind water and sambar powder.",
+      "Cook vegetables separately.",
+      "Mix and boil everything together.",
+      "Temper mustard seeds and curry leaves."
+    ]
+  },
+  {
+    name: "Vegetable Biryani",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/09/veg-biryani-recipe-500x375.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["rice", "vegetables", "spices", "yogurt"],
+    steps: [
+      "Cook rice until half done.",
+      "Fry vegetables with spices.",
+      "Layer rice and vegetables, cook on low heat."
+    ]
+  },
+  {
+    name: "Paneer Butter Masala",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2020/04/paneer-butter-masala.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["paneer", "butter", "tomato", "cream", "spices"],
+    steps: [
+      "Fry paneer cubes in butter.",
+      "Prepare tomato-based gravy with spices.",
+      "Add paneer and cook in the gravy.",
+      "Add cream and simmer."
+    ]
+  },
+  {
+    name: "Aloo Gobi",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2018/03/aloo-gobi.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potato", "cauliflower", "onion", "tomato", "garlic", "ginger", "spices"],
+    steps: [
+      "Fry potatoes and cauliflower.",
+      "Add onions, garlic, and ginger.",
+      "Add tomatoes and spices.",
+      "Simmer until soft and cooked.",
+      "Serve with rice or roti."
+    ]
+  },
+  {
+    name: "Baingan Bharta",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/12/baingan-bharta-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["eggplant", "onion", "tomato", "garlic", "cumin", "coriander powder"],
+    steps: [
+      "Roast the eggplant until charred.",
+      "Peel and mash the eggplant.",
+      "Fry onions, tomatoes, garlic, and cumin.",
+      "Add mashed eggplant and cook.",
+      "Serve hot with naan or rice."
+    ]
+  },
+  {
+    name: "Chana Masala",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/10/chana-masala-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["chickpeas", "onion", "tomato", "garlic", "ginger", "spices"],
+    steps: [
+      "Cook chickpeas until tender.",
+      "Fry onions, garlic, ginger, and tomatoes.",
+      "Add chickpeas and spices.",
+      "Simmer for 10 minutes.",
+      "Serve with rice or roti."
+    ]
+  },
+  {
+    name: "Methi Thepla",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2020/04/methi-thepla.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["fenugreek leaves", "wheat flour", "yogurt", "spices"],
+    steps: [
+      "Mix wheat flour, fenugreek leaves, yogurt, and spices.",
+      "Knead the dough and roll it out into thin rounds.",
+      "Cook on a hot griddle with ghee.",
+      "Serve with yogurt or pickle."
+    ]
+  },
+  {
+    name: "Dosa",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2020/07/dosa-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["rice", "urad dal", "fenugreek seeds", "salt"],
+    steps: [
+      "Soak rice and dal overnight.",
+      "Grind the mixture into a smooth batter.",
+      "Ferment the batter for 12 hours.",
+      "Pour the batter onto a hot griddle and cook until crispy.",
+      "Serve with sambar and chutney."
+    ]
+  },
+  {
+    name: "Pav Bhaji",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/12/pav-bhaji-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["vegetables", "pav buns", "onion", "tomato", "garlic", "spices"],
+    steps: [
+      "Boil mixed vegetables until soft.",
+      "Mash the vegetables and cook with onions, tomatoes, and spices.",
+      "Serve with buttered pav buns."
+    ]
+  },
+  {
+    name: "Rava Upma",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/05/rava-upma-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["semolina", "onion", "green chili", "mustard seeds", "curry leaves"],
+    steps: [
+      "Roast semolina in a pan.",
+      "Fry onions, mustard seeds, curry leaves, and green chili.",
+      "Add water, salt, and roasted semolina.",
+      "Cook until the water is absorbed.",
+      "Serve hot."
+    ]
+  },
+  {
+    name: "Palak Paneer",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2018/03/palak-paneer.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["spinach", "paneer", "onion", "tomato", "cream", "spices"],
+    steps: [
+      "Cook spinach and blend into a puree.",
+      "Fry onions, tomatoes, and spices.",
+      "Add spinach puree and paneer cubes.",
+      "Simmer and add cream.",
+      "Serve with naan or rice."
+    ]
+  },
+  {
+    name: "Aloo Tikki",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2017/04/aloo-tikki-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potato", "peas", "coriander", "spices"],
+    steps: [
+      "Boil and mash potatoes.",
+      "Mix with peas, coriander, and spices.",
+      "Shape into patties and shallow fry.",
+      "Serve with chutney."
+    ]
+  },
+  {
+    name: "Gobi Manchurian",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2019/06/gobi-manchurian.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["cauliflower", "corn flour", "garlic", "soya sauce", "chili sauce", "onion"],
+    steps: [
+      "Fry cauliflower florets.",
+      "Make a batter of corn flour and coat the florets.",
+      "Prepare the Manchurian sauce with garlic, soya, and chili sauce.",
+      "Toss the fried cauliflower in the sauce.",
+      "Serve hot."
+    ]
+  },
+  {
+    name: "Methi Aloo",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/10/methi-aloo.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potato", "fenugreek leaves", "onion", "spices"],
+    steps: [
+      "Fry potatoes until golden.",
+      "Add onions, spices, and fenugreek leaves.",
+      "Cook until soft.",
+      "Serve with rice or roti."
+    ]
+  }, {
+    name: "Vegetarian Lasagna",
+    image: "https://www.example.com/vegetarian-lasagna.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["lasagna noodles", "zucchini", "mushrooms", "spinach", "ricotta cheese", "mozzarella cheese", "parmesan cheese", "tomato sauce", "garlic", "olive oil", "basil"],
+    steps: [
+      "Sauté vegetables with garlic and olive oil.",
+      "Layer noodles, veggies, sauces, and cheeses in a baking dish.",
+      "Repeat layers and top with mozzarella.",
+      "Bake until golden and bubbly.",
+      "Let cool slightly before serving."
+    ]
+  },
+  {
+    name: "Vegetarian Gyoza",
+    image: "https://www.example.com/vegetarian-gyoza.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["gyoza wrappers", "cabbage", "carrot", "mushrooms", "green onions", "ginger", "garlic", "soy sauce", "sesame oil", "cornstarch", "vinegar"],
+    steps: [
+      "Finely chop and sauté the vegetables.",
+      "Mix veggies with soy sauce, sesame oil, and cornstarch.",
+      "Fill gyoza wrappers and seal the edges.",
+      "Pan-fry until bottoms are crispy, then steam to finish.",
+      "Serve with a dipping sauce made of soy sauce and vinegar."
+    ]
+  },
+  {
+    name: "Vegetarian Borscht",
+    image: "https://www.example.com/vegetarian-borscht.jpg",
+    country: "Ukraine",
+    vegetarian: true,
+    ingredients: ["beets", "cabbage", "potatoes", "carrots", "onions", "tomato paste", "garlic", "vegetable broth", "bay leaf", "dill", "vinegar"],
+    steps: [
+      "Sauté onions, garlic, and tomato paste.",
+      "Add vegetables and broth; simmer until tender.",
+      "Season with vinegar, salt, and dill.",
+      "Serve hot with a dollop of sour cream (optional).",
+      "Garnish with fresh dill."
+    ]
+  },
+  {
+    name: "Vegetarian Jollof Rice",
+    image: "https://www.example.com/vegetarian-jollof.jpg",
+    country: "Nigeria",
+    vegetarian: true,
+    ingredients: ["long grain rice", "tomatoes", "bell peppers", "onions", "carrots", "green beans", "garlic", "ginger", "thyme", "bay leaf", "vegetable stock"],
+    steps: [
+      "Blend tomatoes, bell peppers, and onions into a puree.",
+      "Sauté garlic, ginger, and puree until reduced.",
+      "Add vegetables and spices.",
+      "Add rice and stock, cover and cook until done.",
+      "Fluff and serve with fried plantains if desired."
+    ]
+  },
+  {
+    name: "Vegetarian Tagine",
+    image: "https://www.example.com/vegetarian-tagine.jpg",
+    country: "Morocco",
+    vegetarian: true,
+    ingredients: ["carrots", "zucchini", "potatoes", "chickpeas", "onions", "garlic", "tomatoes", "cumin", "cinnamon", "paprika", "olive oil"],
+    steps: [
+      "Sauté onions and garlic in olive oil.",
+      "Add all vegetables, spices, and a bit of water.",
+      "Cover and simmer until veggies are soft.",
+      "Serve with couscous or flatbread.",
+      "Garnish with fresh herbs if desired."
+    ]
+  },
+  {
+    name: "Vegetarian Empanadas",
+    image: "https://www.example.com/vegetarian-empanadas.jpg",
+    country: "Argentina",
+    vegetarian: true,
+    ingredients: ["empanada dough", "onions", "bell peppers", "corn", "black beans", "cheese", "garlic", "cumin", "paprika", "olive oil", "egg wash"],
+    steps: [
+      "Sauté filling ingredients together.",
+      "Let the filling cool, then place in dough rounds.",
+      "Fold, seal, and brush with egg wash.",
+      "Bake until golden brown.",
+      "Serve with salsa or chimichurri."
+    ]
+  },
+  {
+    name: "Vegetarian Tom Yum Soup",
+    image: "https://www.example.com/vegetarian-tomyum.jpg",
+    country: "Thailand",
+    vegetarian: true,
+    ingredients: ["vegetable broth", "lemongrass", "kaffir lime leaves", "galangal", "mushrooms", "tofu", "tomatoes", "onions", "chili paste", "lime juice", "soy sauce"],
+    steps: [
+      "Boil broth with lemongrass, lime leaves, and galangal.",
+      "Strain aromatics, then add mushrooms, tofu, and tomatoes.",
+      "Stir in chili paste, lime juice, and soy sauce.",
+      "Simmer briefly and serve hot.",
+      "Garnish with fresh cilantro or lime wedges."
+    ]
+  },
+  {
+    name: "Vegetarian Dolma",
+    image: "https://www.example.com/vegetarian-dolma.jpg",
+    country: "Turkey",
+    vegetarian: true,
+    ingredients: ["grape leaves", "rice", "onions", "tomatoes", "mint", "parsley", "dill", "olive oil", "lemon juice", "salt", "pepper"],
+    steps: [
+      "Sauté onions and mix with rice, herbs, and seasonings.",
+      "Stuff grape leaves and roll tightly.",
+      "Layer in a pot, cover with water and lemon juice.",
+      "Simmer until tender and cooked through.",
+      "Serve warm or cold with yogurt sauce."
+    ]
+  },
+  {
+    name: "Vegetarian Arepas",
+    image: "https://www.example.com/vegetarian-arepas.jpg",
+    country: "Venezuela",
+    vegetarian: true,
+    ingredients: ["arepa flour (masa arepa)", "water", "salt", "black beans", "plantains", "avocados", "tomatoes", "cheese", "cumin", "cilantro", "lime juice"],
+    steps: [
+      "Mix arepa flour, salt, and water to make dough.",
+      "Form patties and cook on a griddle until golden.",
+      "Split and fill with beans, fried plantains, veggies, and cheese.",
+      "Drizzle with lime juice and garnish with cilantro.",
+      "Serve immediately while warm."
+    ]
+  },
+  {
+    name: "Vegetarian Rosti with Toppings",
+    image: "https://www.example.com/vegetarian-rosti.jpg",
+    country: "Switzerland",
+    vegetarian: true,
+    ingredients: ["potatoes", "onions", "olive oil", "salt", "pepper", "cheese", "sour cream", "chives", "mushrooms", "spinach", "garlic"],
+    steps: [
+      "Grate and squeeze out excess moisture from potatoes.",
+      "Mix with salt, pepper, and onions.",
+      "Pan-fry in olive oil until crispy on both sides.",
+      "Top with sautéed spinach, mushrooms, and garlic.",
+      "Finish with cheese, sour cream, and chopped chives."
+    ]
+  },
+  {
+    name: "Vegetarian Moussaka",
+    image: "https://www.example.com/vegetarian-moussaka.jpg",
+    country: "Greece",
+    vegetarian: true,
+    ingredients: ["eggplant", "potatoes", "onions", "tomato paste", "garlic", "olive oil", "cinnamon", "oregano", "cheese", "flour", "milk"],
+    steps: [
+      "Slice and fry eggplant and potatoes.",
+      "Sauté onions and garlic, then add tomato paste and spices.",
+      "Layer vegetables, sauce, and cheese in a baking dish.",
+      "Bake until golden and bubbling.",
+      "Serve warm, garnished with fresh herbs."
+    ]
+  },
+  {
+    name: "Vegetarian Bhel Puri",
+    image: "https://www.example.com/vegetarian-bhel-puri.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["puffed rice", "onions", "tomatoes", "potatoes", "cilantro", "tamarind chutney", "sev", "peanuts", "green chilies", "spices", "lemon juice"],
+    steps: [
+      "Mix puffed rice with chopped onions, tomatoes, and potatoes.",
+      "Add cilantro, green chilies, peanuts, and sev.",
+      "Top with tamarind chutney and lemon juice.",
+      "Toss well and serve immediately."
+    ]
+  },
+  {
+    name: "Vegetarian Paella",
+    image: "https://www.example.com/vegetarian-paella.jpg",
+    country: "Spain",
+    vegetarian: true,
+    ingredients: ["rice", "tomatoes", "bell peppers", "peas", "green beans", "artichokes", "onions", "garlic", "saffron", "vegetable broth", "olive oil"],
+    steps: [
+      "Sauté onions, garlic, and bell peppers in olive oil.",
+      "Add rice, saffron, and vegetable broth.",
+      "Stir in tomatoes, peas, and other vegetables.",
+      "Simmer until rice is cooked and liquid is absorbed.",
+      "Serve with lemon wedges."
+    ]
+  },
+  {
+    name: "Vegetarian Burritos",
+    image: "https://www.example.com/vegetarian-burritos.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["tortillas", "black beans", "rice", "avocado", "tomato", "lettuce", "cheese", "sour cream", "jalapeños", "onions", "cilantro"],
+    steps: [
+      "Heat tortillas and fill with rice, black beans, and sautéed veggies.",
+      "Add cheese, avocado, and salsa.",
+      "Wrap and serve with sour cream and jalapeños."
+    ]
+  },
+  {
+    name: "Vegetarian Falafel",
+    image: "https://www.example.com/vegetarian-falafel.jpg",
+    country: "Middle East",
+    vegetarian: true,
+    ingredients: ["chickpeas", "onions", "garlic", "parsley", "cumin", "coriander", "flour", "baking powder", "salt", "pepper", "vegetable oil"],
+    steps: [
+      "Blend chickpeas, onions, garlic, and herbs.",
+      "Form into balls and fry until crispy.",
+      "Serve with pita, tahini, and fresh vegetables."
+    ]
+  },
+  {
+    name: "Vegetarian Tacos",
+    image: "https://www.example.com/vegetarian-tacos.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["corn tortillas", "black beans", "avocado", "lettuce", "tomato", "cheese", "sour cream", "cilantro", "lime", "onions", "spices"],
+    steps: [
+      "Warm tortillas and fill with seasoned black beans.",
+      "Top with lettuce, tomato, avocado, and cheese.",
+      "Add sour cream, cilantro, and lime juice.",
+      "Serve immediately."
+    ]
+  },
+  {
+    name: "Vegetarian Risotto",
+    image: "https://www.example.com/vegetarian-risotto.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["arborio rice", "vegetable broth", "onions", "garlic", "parmesan cheese", "butter", "white wine", "spinach", "peas", "lemon juice", "herbs"],
+    steps: [
+      "Sauté onions and garlic in butter.",
+      "Add rice and wine, cook until absorbed.",
+      "Gradually add broth, stirring until rice is tender.",
+      "Stir in spinach, peas, and cheese.",
+      "Finish with lemon juice and fresh herbs."
+    ]
+  },
+  {
+    name: "Vegetarian Sushi",
+    image: "https://www.example.com/vegetarian-sushi.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["sushi rice", "nori sheets", "avocado", "cucumber", "carrot", "rice vinegar", "sugar", "salt", "soy sauce", "pickled ginger", "wasabi"],
+    steps: [
+      "Cook sushi rice and season with rice vinegar, sugar, and salt.",
+      "Place nori on a mat and spread rice evenly.",
+      "Add sliced vegetables and roll tightly.",
+      "Slice into pieces and serve with soy sauce and wasabi."
+    ]
+  },
+  {
+    name: "Vegetarian Khichdi",
+    image: "https://www.example.com/vegetarian-khichdi.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["rice", "moong dal", "onions", "tomatoes", "turmeric", "cumin seeds", "ginger", "garlic", "ghee", "coriander", "green chilies"],
+    steps: [
+      "Sauté cumin seeds, onions, and ginger in ghee.",
+      "Add tomatoes, turmeric, and rice along with moong dal.",
+      "Cook with water until soft and well-blended.",
+      "Serve with a dollop of ghee and fresh coriander."
+    ]
+  },
+  {
+    name: "Vegetarian Souvlaki",
+    image: "https://www.example.com/vegetarian-souvlaki.jpg",
+    country: "Greece",
+    vegetarian: true,
+    ingredients: ["tofu", "zucchini", "red onions", "bell peppers", "olive oil", "oregano", "lemon juice", "garlic", "cumin", "tomato", "pita bread"],
+    steps: [
+      "Marinate tofu and vegetables in olive oil, lemon juice, and spices.",
+      "Grill until tender and charred.",
+      "Serve in pita with tomato, cucumber, and a drizzle of tahini."
+    ]
+  },
+  {
+    name: "Cabbage Sabzi",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/11/cabbage-curry.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["cabbage", "onion", "tomato", "green chili", "mustard seeds"],
+    steps: [
+      "Fry mustard seeds and onions.",
+      "Add tomatoes and cook until soft.",
+      "Add shredded cabbage and cook until soft.",
+      "Serve with rice or roti."
+    ]
+  },
+  {
+    name: "Vada Pav",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2016/12/vada-pav.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potato", "pav buns", "chili", "garlic", "spices"],
+    steps: [
+      "Make a spiced potato filling.",
+      "Shape into patties and deep fry.",
+      "Stuff the fried patties into pav buns.",
+      "Serve with chutney."
+    ]
+  },
+  {
+    name: "Dhokla",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2020/09/dhokla-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["besan", "yogurt", "mustard seeds", "curry leaves"],
+    steps: [
+      "Make a batter with besan, yogurt, and water.",
+      "Steam the batter until cooked.",
+      "Temper with mustard seeds and curry leaves.",
+      "Serve hot."
+    ]
+  },
+  {
+    name: "Idli",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2019/01/idli-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["rice", "urad dal", "fenugreek seeds"],
+    steps: [
+      "Soak rice and dal overnight.",
+      "Grind into a batter and ferment.",
+      "Steam the batter in idli molds.",
+      "Serve with chutney and sambar."
+    ]
+  },
+  {
+    name: "Vegetarian Lasagna",
+    image: "https://www.example.com/vegetarian-lasagna.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["lasagna noodles", "ricotta cheese", "spinach", "mozzarella cheese", "tomato sauce", "garlic", "onions", "basil", "oregano", "zucchini", "olive oil"],
+    steps: [
+      "Cook lasagna noodles and set aside.",
+      "Sauté garlic, onions, and zucchini in olive oil.",
+      "Layer noodles, spinach, ricotta, and tomato sauce in a baking dish.",
+      "Top with mozzarella and bake until golden.",
+      "Serve with fresh basil."
+    ]
+  },
+  {
+    name: "Vegetarian Sushi Rolls",
+    image: "https://www.example.com/vegetarian-sushi-rolls.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["sushi rice", "nori sheets", "avocado", "cucumber", "carrot", "rice vinegar", "sugar", "salt", "soy sauce", "pickled ginger", "wasabi"],
+    steps: [
+      "Cook sushi rice and season with rice vinegar, sugar, and salt.",
+      "Place nori on a mat and spread rice evenly.",
+      "Add sliced vegetables and roll tightly.",
+      "Slice into pieces and serve with soy sauce and wasabi."
+    ]
+  },
+  {
+    name: "Vegetarian Tofu Stir Fry",
+    image: "https://www.example.com/vegetarian-tofu-stir-fry.jpg",
+    country: "China",
+    vegetarian: true,
+    ingredients: ["tofu", "bell peppers", "broccoli", "carrots", "soy sauce", "ginger", "garlic", "green onions", "sesame oil", "rice vinegar", "rice"],
+    steps: [
+      "Press and cube tofu, then stir-fry with ginger and garlic.",
+      "Add vegetables and soy sauce, and cook until tender.",
+      "Serve with steamed rice."
+    ]
+  },
+  {
+    name: "Vegetarian Goulash",
+    image: "https://www.example.com/vegetarian-goulash.jpg",
+    country: "Hungary",
+    vegetarian: true,
+    ingredients: ["potatoes", "carrots", "onions", "bell peppers", "tomatoes", "paprika", "garlic", "vegetable broth", "olive oil", "bay leaves", "parsley"],
+    steps: [
+      "Sauté onions, garlic, and peppers in olive oil.",
+      "Add potatoes, carrots, tomatoes, and paprika.",
+      "Pour in vegetable broth and simmer until soft.",
+      "Serve with fresh parsley."
+    ]
+  },
+  {
+    name: "Vegetarian Shepherd's Pie",
+    image: "https://www.example.com/vegetarian-shepherds-pie.jpg",
+    country: "UK",
+    vegetarian: true,
+    ingredients: ["potatoes", "lentils", "onions", "carrots", "peas", "tomatoes", "vegetable broth", "garlic", "olive oil", "thyme", "nutmeg"],
+    steps: [
+      "Boil and mash potatoes.",
+      "Sauté onions, carrots, garlic, and peas in olive oil.",
+      "Mix lentils and vegetable broth, cook until thick.",
+      "Layer lentil mixture and top with mashed potatoes.",
+      "Bake until golden."
+    ]
+  },
+  {
+    name: "Vegetarian Tabbouleh",
+    image: "https://www.example.com/vegetarian-tabbouleh.jpg",
+    country: "Lebanon",
+    vegetarian: true,
+    ingredients: ["bulgur wheat", "parsley", "tomatoes", "cucumbers", "green onions", "lemon juice", "olive oil", "mint", "salt", "pepper", "garlic"],
+    steps: [
+      "Soak bulgur wheat in water.",
+      "Chop vegetables and herbs.",
+      "Mix bulgur, vegetables, herbs, and dressing.",
+      "Serve chilled."
+    ]
+  },
+  {
+    name: "Vegetarian Ceviche",
+    image: "https://www.example.com/vegetarian-ceviche.jpg",
+    country: "Peru",
+    vegetarian: true,
+    ingredients: ["avocado", "tomatoes", "onions", "cilantro", "lime juice", "cucumber", "bell peppers", "chili peppers", "salt", "pepper", "olive oil"],
+    steps: [
+      "Chop all vegetables and mix with lime juice.",
+      "Add avocado and cilantro.",
+      "Season with salt, pepper, and chili.",
+      "Serve immediately as a refreshing appetizer."
+    ]
+  },
+  {
+    name: "Vegetarian Biryani",
+    image: "https://www.example.com/vegetarian-biryani.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["basmati rice", "carrots", "peas", "potatoes", "onions", "tomatoes", "garlic", "ginger", "yogurt", "saffron", "spices", "cilantro", "mint"],
+    steps: [
+      "Sauté onions, garlic, and spices in ghee.",
+      "Layer rice and vegetables, cook until aromatic.",
+      "Add saffron, cilantro, and mint for fragrance.",
+      "Serve hot with raita."
+    ]
+  },
+  {
+    name: "Vegetarian Ramen",
+    image: "https://www.example.com/vegetarian-ramen.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["ramen noodles", "vegetable broth", "tofu", "mushrooms", "spinach", "green onions", "soy sauce", "sesame oil", "garlic", "ginger", "egg", "nori"],
+    steps: [
+      "Cook ramen noodles and set aside.",
+      "Prepare broth with garlic, ginger, and soy sauce.",
+      "Add tofu and mushrooms to the broth.",
+      "Serve noodles in the broth with spinach, egg, and nori."
+    ]
+  },
+  {
+    name: "Vegetarian Banh Mi",
+    image: "https://www.example.com/vegetarian-banh-mi.jpg",
+    country: "Vietnam",
+    vegetarian: true,
+    ingredients: ["baguette", "tofu", "carrot", "cucumber", "cilantro", "jalapeño", "pickled radish", "soy sauce", "lime", "garlic", "hoisin sauce"],
+    steps: [
+      "Marinate tofu in soy sauce and garlic.",
+      "Grill tofu and slice into pieces.",
+      "Assemble sandwich with vegetables and tofu.",
+      "Drizzle with hoisin sauce and serve."
+    ]
+  },
+  {
+    name: "Chole Bhature",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2016/02/chole-bhature-recipe.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["chickpeas", "onion", "tomato", "spices", "flour"],
+    steps: [
+      "Cook chickpeas with spices.",
+      "Prepare a dough with flour and make bhature.",
+      "Fry the bhature.",
+      "Serve with chole."
+    ]
+  },
+  {
+    name: "Methi Pulao",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2015/04/methi-pulao.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["rice", "fenugreek leaves", "onion", "spices"],
+    steps: [
+      "Cook rice.",
+      "Fry onions and spices.",
+      "Add fenugreek leaves and rice.",
+      "Cook for a few minutes.",
+      "Serve hot."
+    ]
+  },
+  {
+    name: "Kadhi Pakora",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2018/09/kadhi-pakora.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["yogurt", "besan", "onion", "spices", "cilantro"],
+    steps: [
+      "Make a batter with besan and spices.",
+      "Fry the pakoras.",
+      "Prepare the kadhi with yogurt and spices.",
+      "Add fried pakoras to the kadhi.",
+      "Serve with rice."
+    ]
+  },
+  {
+    name: "Pesarattu",
+    image: "https://www.indianhealthyrecipes.com/wp-content/uploads/2019/11/pesarattu.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["green gram", "ginger", "green chili", "onion", "spices"],
+    steps: [
+      "Soak green gram overnight.",
+      "Grind with spices into a batter.",
+      "Cook as dosa on a griddle.",
+      "Serve with chutney."
+    ]
+  },
+  // Add new dishes here as needed from other countries.
+  {
+    name: "Pizza Margherita",
+    image: "https://upload.wikimedia.org/wikipedia/commons/a/a6/Margherita_pizza_2018.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["pizza dough", "tomato sauce", "mozzarella", "basil", "olive oil"],
+    steps: [
+      "Preheat oven to 475°F (245°C).",
+      "Roll out the pizza dough.",
+      "Spread tomato sauce and top with mozzarella.",
+      "Bake for 10-12 minutes.",
+      "Garnish with fresh basil and olive oil."
+    ]
+  },
+  {
+    name: "Pasta Primavera",
+    image: "https://upload.wikimedia.org/wikipedia/commons/6/60/Pasta_primavera.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["pasta", "bell peppers", "zucchini", "cherry tomatoes", "olive oil", "garlic"],
+    steps: [
+      "Cook pasta according to package directions.",
+      "Sauté vegetables with garlic and olive oil.",
+      "Mix the pasta with the sautéed vegetables.",
+      "Serve with parmesan cheese."
+    ]
+  }
+];
+
+
+
+    const allIngredients = [...new Set(recipes.flatMap(r => r.ingredients))];
+
+    function handleInput() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase();
+      const suggestions = allIngredients.filter(ing => ing.startsWith(input));
+      const autoList = document.getElementById("autocompleteList");
+
+      autoList.innerHTML = "";
+      suggestions.forEach(s => {
+        const item = document.createElement("div");
+        item.className = "autocomplete-item";
+        item.textContent = s;
+        item.onclick = () => {
+          document.getElementById("ingredientInput").value = s;
+          autoList.innerHTML = "";
+          searchRecipes();
+        };
+        autoList.appendChild(item);
+      });
+
+      searchRecipes();
+    }
+
+    function searchRecipes() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase().split(',').map(i => i.trim());
+      const resultDiv = document.getElementById("recipeResults");
+      resultDiv.innerHTML = "";
+
+      const filtered = recipes.filter(recipe =>
+        recipe.vegetarian &&
+        input.some(ing => recipe.ingredients.includes(ing))
+      );
+
+      filtered.forEach(recipe => {
+        const card = document.createElement("div");
+        card.classList.add("recipe-card");
+        card.innerHTML = `
+          <img src="${recipe.image}" alt="${recipe.name}">
+          <h3>${recipe.name} (${recipe.country})</h3>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
+          <div class="steps">
+            <strong>Steps:</strong>
+            <ol>${recipe.steps.map(step => `<li>${step}</li>`).join("")}</ol>
+          </div>
+        `;
+        resultDiv.appendChild(card);
+      });
+    }
+
+    function toggleTheme() {
+      document.body.classList.toggle("dark");
+    }
+  </script>
+</body>
+</html>

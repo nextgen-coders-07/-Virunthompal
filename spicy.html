@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Virunthompal - Spicy Snacks Recipe Search</title>
+  <link rel="icon" href="logo.png">
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <head>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  </head>
+  
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      height: 100vh;
+    }
+
+    nav {
+      width: 250px;
+      background: #ffffff;
+      box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+      display: flex;
+      flex-direction: column;
+      padding: 2rem 1rem;
+      border-top-right-radius: 20px;
+      border-bottom-right-radius: 20px;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: #4a90e2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #eaf1f8;
+      color: #4a90e2;
+    }
+
+    .main {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: start;
+      align-items: center;
+      text-align: center;
+      overflow-y: auto;
+      width: 100%;
+    }
+
+    .search-box {
+      width: 100%;
+      max-width: 600px;
+      margin-bottom: 2rem;
+    }
+
+    #ingredientInput {
+      width: 100%;
+      padding: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      font-size: 1rem;
+    }
+
+    #autocompleteList {
+      background: #ffffff;
+      border: 1px solid #ccc;
+      max-height: 150px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
+      border-radius: 10px;
+    }
+
+    .autocomplete-item {
+      padding: 0.75rem;
+      cursor: pointer;
+    }
+
+    .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+
+    .recipe-card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      width: 100%;
+      max-width: 700px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      text-align: left;
+    }
+
+    .recipe-card img {
+      width: 100%;
+      border-radius: 10px;
+      margin-bottom: 1rem;
+      max-height: 200px;
+      object-fit: cover;
+    }
+
+    .recipe-card h3 {
+      color: #4a90e2;
+      margin-bottom: 0.5rem;
+    }
+
+    .steps ol {
+      padding-left: 1.5rem;
+    }
+
+    .theme-toggle {
+      margin-top: auto;
+      padding: 1rem;
+      background: #4a90e2;
+      color: white;
+      border-radius: 10px;
+      text-align: center;
+      cursor: pointer;
+    }
+
+    body.dark {
+      background: #1e1e1e;
+      color: #eee;
+    }
+
+    body.dark nav {
+      background: #2c2c2c;
+    }
+
+    body.dark .main {
+      background: #1e1e1e;
+    }
+
+    body.dark #ingredientInput,
+    body.dark .recipe-card,
+    body.dark #autocompleteList {
+      background: #2c2c2c;
+      color: #eee;
+      border: 1px solid #555;
+    }
+
+    body.dark .autocomplete-item:hover {
+      background-color: #4a90e2;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <div class="logo">Virunthompal</div>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\home.html" class="nav-item"><i class="fas fa-home"></i><span>Home</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\about.html" class="nav-item"><i class="fas fa-user"></i><span>About Us</span></a>
+    <a href="D:\Admin\Documents\OneDrive\Desktop\project 2\contact.html" class="nav-item"><i class="fas fa-envelope"></i><span>Contact</span></a>
+ 
+  </nav>
+
+  <div class="main">
+    <div class="search-box">
+      <input type="text" id="ingredientInput" placeholder="Type ingredients (e.g. potato, onion)" oninput="handleInput()">
+      <div id="autocompleteList"></div>
+    </div>
+    <div id="recipeResults"></div>
+  </div>
+
+  <script>
+    const recipes = [
+      {
+        name: "Samosa",
+        image: "https://www.example.com/samosa.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["potato", "onion", "spices", "flour", "peas"],
+        steps: [
+          "Make the filling with mashed potatoes, peas, and spices.",
+          "Stuff the filling into the dough.",
+          "Deep fry until golden and crispy.",
+          "Serve with chutney."
+        ]
+      },
+      {
+        name: "Pakora",
+        image: "https://www.example.com/pakora.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["onion", "chickpea flour", "spices", "cilantro", "green chilies"],
+        steps: [
+          "Mix chickpea flour and spices with water.",
+          "Add onions and chilies to the batter.",
+          "Fry spoonfuls of the batter until golden.",
+          "Serve with mint chutney."
+        ]
+      },
+      {
+        name: "Chili Paneer",
+        image: "https://www.example.com/chili-paneer.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["paneer", "green chilies", "garlic", "soy sauce", "spices"],
+        steps: [
+          "Fry paneer cubes until crispy.",
+          "Cook garlic and green chilies in a spicy sauce.",
+          "Add fried paneer to the sauce and toss.",
+          "Serve with rice or noodles."
+        ]
+      },
+      {
+        name: "Vada Pav",
+        image: "https://www.example.com/vada-pav.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["potato", "spices", "bread", "mustard seeds", "curry leaves"],
+        steps: [
+          "Make the vada by frying spiced mashed potatoes.",
+          "Serve vada in a pav (bread bun) with chutneys.",
+          "Garnish with fried green chilies."
+        ]
+      },
+      {
+        name: "Pav Bhaji",
+        image: "https://www.example.com/pav-bhaji.jpg",
+        country: "India",
+        vegetarian: true,
+        ingredients: ["potato", "tomato", "peas", "spices", "bread"],
+        steps: [
+          "Mash vegetables with spices to make the bhaji.",
+          "Toast pav (bread) on a pan with butter.",
+          "Serve bhaji with pav, topped with onions and cilantro."
+        ]
+      },
+      {
+  name: "Masala Dosa",
+  image: "https://www.example.com/masala-dosa.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["rice", "urad dal", "potato", "onion", "spices"],
+  steps: [
+    "Make dosa batter and ferment it overnight.",
+    "Prepare spiced potato filling.",
+    "Spread dosa on hot pan, stuff with filling, and roast.",
+    "Serve with chutney and sambar."
+  ]
+},
+{
+  name: "Samosa",
+  image: "https://www.example.com/samosa.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["potato", "peas", "spices", "flour", "oil"],
+  steps: [
+    "Make dough and spicy potato filling.",
+    "Shape samosas and fill them.",
+    "Deep fry until golden brown.",
+    "Serve with chutney."
+  ]
+},
+{
+  name: "Mirchi Bajji",
+  image: "https://www.example.com/mirchi-bajji.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["green chili", "gram flour", "spices", "salt", "oil"],
+  steps: [
+    "Slit chilies and stuff with spice mix.",
+    "Dip in gram flour batter.",
+    "Deep fry till golden.",
+    "Serve hot with chutney."
+  ]
+},
+{
+  name: "Cutlet",
+  image: "https://www.example.com/veg-cutlet.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["potato", "carrot", "beans", "bread crumbs", "spices"],
+  steps: [
+    "Boil and mash vegetables with spices.",
+    "Shape into patties and coat in bread crumbs.",
+    "Shallow or deep fry.",
+    "Serve with ketchup or chutney."
+  ]
+},
+{
+  name: "Paneer Pakora",
+  image: "https://www.example.com/paneer-pakora.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["paneer", "gram flour", "spices", "oil"],
+  steps: [
+    "Slice paneer and dip in spiced batter.",
+    "Deep fry until crispy.",
+    "Serve hot with mint chutney."
+  ]
+},
+{
+  name: "Aloo Bonda",
+  image: "https://www.example.com/aloo-bonda.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["potato", "gram flour", "mustard seeds", "curry leaves"],
+  steps: [
+    "Make spiced potato balls.",
+    "Dip in gram flour batter.",
+    "Deep fry until golden.",
+    "Serve with coconut chutney."
+  ]
+},
+{
+  name: "Corn Chaat",
+  image: "https://www.example.com/corn-chaat.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["corn", "onion", "tomato", "lemon", "spices"],
+  steps: [
+    "Boil corn and mix with chopped veggies.",
+    "Add spices and lemon juice.",
+    "Serve chilled or warm."
+  ]
+},
+{
+  name: "Mysore Bonda",
+  image: "https://www.example.com/mysore-bonda.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["urad dal", "green chili", "ginger", "curry leaves", "salt"],
+  steps: [
+    "Grind soaked dal with spices.",
+    "Shape into round balls.",
+    "Deep fry until crispy.",
+    "Serve with coconut chutney."
+  ]
+},
+{
+  name: "Vegetable Spring Roll",
+  image: "https://www.example.com/spring-roll.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["cabbage", "carrot", "noodles", "sheets", "soy sauce"],
+  steps: [
+    "Cook vegetables with sauce.",
+    "Wrap in spring roll sheets.",
+    "Deep fry until golden.",
+    "Serve with chili sauce."
+  ]
+},
+{
+  name: "Batata Vada",
+  image: "https://www.example.com/batata-vada.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["potato", "mustard seeds", "curry leaves", "besan", "spices"],
+  steps: [
+    "Prepare spicy mashed potato.",
+    "Make balls, dip in batter.",
+    "Deep fry till golden.",
+    "Serve with pav or chutney."
+  ]
+},
+{
+  name: "Onion Pakoda",
+  image: "https://www.example.com/onion-pakoda.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["onion", "gram flour", "rice flour", "spices", "oil"],
+  steps: [
+    "Mix onions with flours and spices.",
+    "Fry until crispy.",
+    "Serve with tea or chutney."
+  ]
+},
+{
+  name: "Kothu Parotta (Veg)",
+  image: "https://www.example.com/kothu-parotta.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["parotta", "onion", "tomato", "masala", "egg optional"],
+  steps: [
+    "Chop parotta and sauté with masala and veggies.",
+    "Add optional scrambled egg or paneer.",
+    "Serve hot with raita."
+  ]
+},
+{
+  name: "Bread Roll",
+  image: "https://www.example.com/bread-roll.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["bread", "potato", "spices", "oil"],
+  steps: [
+    "Make spiced potato filling.",
+    "Wrap in moistened bread slices.",
+    "Fry until golden.",
+    "Serve with ketchup."
+  ]
+},
+{
+  name: "Hara Bhara Kabab",
+  image: "https://www.example.com/hara-bhara-kabab.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["spinach", "peas", "potato", "spices", "bread crumbs"],
+  steps: [
+    "Grind veggies, mix with mashed potato.",
+    "Shape and fry or bake.",
+    "Serve with green chutney."
+  ]
+},
+{
+  name: "Cheese Corn Balls",
+  image: "https://www.example.com/cheese-corn-balls.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["cheese", "corn", "mashed potato", "spices", "breadcrumbs"],
+  steps: [
+    "Mix ingredients, shape into balls.",
+    "Coat with breadcrumbs.",
+    "Fry until golden.",
+    "Serve with dip."
+  ]
+},
+{
+  name: "Moong Dal Chilla",
+  image: "https://www.example.com/moong-chilla.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["moong dal", "onion", "green chili", "spices"],
+  steps: [
+    "Soak and grind moong dal.",
+    "Add veggies and make thin pancakes.",
+    "Serve with chutney."
+  ]
+},
+{
+  name: "Paneer Tikka",
+  image: "https://www.example.com/paneer-tikka.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["paneer", "yogurt", "spices", "bell peppers", "skewers"],
+  steps: [
+    "Marinate paneer and veggies.",
+    "Grill or roast until charred.",
+    "Serve with mint dip."
+  ]
+},
+{
+  name: "Besan Chilla",
+  image: "https://www.example.com/besan-chilla.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["gram flour", "onion", "spices", "coriander"],
+  steps: [
+    "Mix batter and make pancakes.",
+    "Cook both sides till golden.",
+    "Serve with chutney or pickle."
+  ]
+},
+{
+  name: "Veg Momos",
+  image: "https://www.example.com/veg-momos.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["maida", "cabbage", "carrot", "soy sauce", "garlic"],
+  steps: [
+    "Make dough and filling.",
+    "Shape into dumplings.",
+    "Steam and serve with spicy chutney."
+  ]
+},
+{
+  name: "Stuffed Capsicum",
+  image: "https://www.example.com/stuffed-capsicum.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["capsicum", "paneer", "spices", "onion", "cheese"],
+  steps: [
+    "Prepare stuffing.",
+    "Stuff capsicum and roast or bake.",
+    "Serve hot."
+  ]
+},
+{
+  name: "Chili Paneer",
+  image: "https://www.example.com/chili-paneer.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["paneer", "capsicum", "soy sauce", "chili", "garlic"],
+  steps: [
+    "Fry paneer and mix with sautéed veggies.",
+    "Toss in sauces.",
+    "Serve dry or with gravy."
+  ]
+},
+{
+  name: "Sabudana Vada",
+  image: "https://www.example.com/sabudana-vada.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["sabudana", "potato", "peanuts", "spices"],
+  steps: [
+    "Soak sabudana, mix with mashed potato.",
+    "Shape and deep fry.",
+    "Serve with curd or chutney."
+  ]
+},
+{
+  name: "Dhokla",
+  image: "https://www.example.com/dhokla.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["besan", "yogurt", "fruit salt", "mustard seeds", "curry leaves"],
+  steps: [
+    "Make batter and steam.",
+    "Tempering on top.",
+    "Cut and serve with chutney."
+  ]
+},
+{
+  name: "Vegetable Puff",
+  image: "https://www.example.com/veg-puff.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["puff pastry", "potato", "peas", "spices", "carrot"],
+  steps: [
+    "Stuff pastry with veg filling.",
+    "Bake till golden and flaky.",
+    "Serve with ketchup."
+  ]
+},
+{
+  name: "Vazhakkai Bajji",
+  image: "https://www.example.com/vazhakkai-bajji.jpg",
+  country: "India",
+  vegetarian: true,
+  ingredients: ["raw banana", "besan", "spices", "oil"],
+  steps: [
+    "Slice banana and dip in batter.",
+    "Fry till crispy.",
+    "Serve with coconut chutney."
+  ]
+},
+{
+    name: "Falafel",
+    image: "https://www.example.com/falafel.jpg",
+    country: "Middle East",
+    vegetarian: true,
+    ingredients: ["chickpeas", "parsley", "onion", "garlic", "spices"],
+    steps: [
+      "Blend chickpeas with herbs and spices.",
+      "Form into balls and deep fry.",
+      "Serve with tahini or pita."
+    ]
+  },
+  {
+    name: "Chili Paneer",
+    image: "https://www.example.com/chili-paneer.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["paneer", "capsicum", "soy sauce", "chili", "garlic"],
+    steps: [
+      "Fry paneer cubes and sauté with vegetables.",
+      "Add soy sauce, chili, and cook until coated.",
+      "Serve hot as a snack or starter."
+    ]
+  },
+  {
+    name: "Jalapeño Poppers",
+    image: "https://www.example.com/jalapeno-poppers.jpg",
+    country: "USA",
+    vegetarian: true,
+    ingredients: ["jalapeños", "cheese", "breadcrumbs", "spices"],
+    steps: [
+      "Stuff jalapeños with cheese.",
+      "Coat with breadcrumbs and fry.",
+      "Serve hot and crispy."
+    ]
+  },
+  {
+    name: "Kimchi Pancakes",
+    image: "https://www.example.com/kimchi-pancakes.jpg",
+    country: "Korea",
+    vegetarian: true,
+    ingredients: ["kimchi", "flour", "scallions", "chili flakes"],
+    steps: [
+      "Mix chopped kimchi with batter.",
+      "Fry spoonfuls until golden brown.",
+      "Serve with soy dipping sauce."
+    ]
+  },
+  {
+    name: "Spicy Tofu Skewers",
+    image: "https://www.example.com/spicy-tofu-skewers.jpg",
+    country: "China",
+    vegetarian: true,
+    ingredients: ["tofu", "soy sauce", "chili paste", "garlic"],
+    steps: [
+      "Marinate tofu in spicy mix.",
+      "Grill or pan-fry skewers.",
+      "Serve with dipping sauce."
+    ]
+  },
+  {
+    name: "Empanadas de Queso",
+    image: "https://www.example.com/empanadas.jpg",
+    country: "Argentina",
+    vegetarian: true,
+    ingredients: ["cheese", "dough", "chili flakes", "onions"],
+    steps: [
+      "Stuff dough with spicy cheese filling.",
+      "Seal and bake or fry.",
+      "Serve warm with salsa."
+    ]
+  },
+  {
+    name: "Patatas Bravas",
+    image: "https://www.example.com/patatas-bravas.jpg",
+    country: "Spain",
+    vegetarian: true,
+    ingredients: ["potatoes", "paprika", "tomato sauce", "olive oil"],
+    steps: [
+      "Fry potato cubes until crisp.",
+      "Top with spicy tomato sauce.",
+      "Garnish with herbs and serve."
+    ]
+  },
+  {
+    name: "Spicy Corn Fritters",
+    image: "https://www.example.com/corn-fritters.jpg",
+    country: "Thailand",
+    vegetarian: true,
+    ingredients: ["corn", "flour", "chili", "herbs"],
+    steps: [
+      "Mix corn with flour and spices.",
+      "Drop spoonfuls into hot oil.",
+      "Fry until golden and crispy."
+    ]
+  },
+  {
+    name: "Crispy Tostones",
+    image: "https://www.example.com/tostones.jpg",
+    country: "Puerto Rico",
+    vegetarian: true,
+    ingredients: ["plantains", "salt", "garlic", "oil"],
+    steps: [
+      "Fry sliced plantains twice.",
+      "Smash and season with garlic.",
+      "Serve hot with dip."
+    ]
+  },
+  {
+    name: "Spicy Aloo Tikki",
+    image: "https://www.example.com/aloo-tikki.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potatoes", "green chili", "spices", "breadcrumbs"],
+    steps: [
+      "Mash potatoes with spices and form patties.",
+      "Shallow fry till crispy.",
+      "Serve with chutneys."
+    ]
+  },
+  {
+    name: "Vegetable Gyoza",
+    image: "https://www.example.com/gyoza.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["cabbage", "carrot", "soy sauce", "ginger", "chili"],
+    steps: [
+      "Stuff wrappers with spicy vegetable mix.",
+      "Steam and pan-fry the gyoza.",
+      "Serve with dipping sauce."
+    ]
+  },
+  {
+    name: "Batata Harra",
+    image: "https://www.example.com/batata-harra.jpg",
+    country: "Lebanon",
+    vegetarian: true,
+    ingredients: ["potatoes", "chili", "coriander", "garlic", "lemon"],
+    steps: [
+      "Fry potato cubes.",
+      "Toss with garlic, chili, and lemon.",
+      "Garnish and serve."
+    ]
+  },
+  {
+    name: "Spicy Hummus with Pita Chips",
+    image: "https://www.example.com/spicy-hummus.jpg",
+    country: "Middle East",
+    vegetarian: true,
+    ingredients: ["chickpeas", "tahini", "chili", "olive oil"],
+    steps: [
+      "Blend chickpeas with tahini and chili.",
+      "Serve with crispy pita chips.",
+      "Drizzle with olive oil."
+    ]
+  },
+  {
+    name: "Mozzarella Sticks with Chili Dip",
+    image: "https://www.example.com/mozzarella-sticks.jpg",
+    country: "Italy",
+    vegetarian: true,
+    ingredients: ["mozzarella", "breadcrumbs", "chili flakes", "herbs"],
+    steps: [
+      "Coat cheese in breadcrumbs and freeze.",
+      "Fry until golden.",
+      "Serve with chili dip."
+    ]
+  },
+  {
+    name: "Zucchini Fritters",
+    image: "https://www.example.com/zucchini-fritters.jpg",
+    country: "Greece",
+    vegetarian: true,
+    ingredients: ["zucchini", "flour", "herbs", "chili"],
+    steps: [
+      "Grate zucchini and mix with batter.",
+      "Fry until crispy.",
+      "Serve with yogurt dip."
+    ]
+  },
+  {
+    name: "Chili Garlic Edamame",
+    image: "https://www.example.com/edamame.jpg",
+    country: "Japan",
+    vegetarian: true,
+    ingredients: ["edamame", "garlic", "chili oil", "salt"],
+    steps: [
+      "Boil edamame and toss with chili garlic oil.",
+      "Serve hot as a snack.",
+      "Sprinkle with salt."
+    ]
+  },
+  {
+    name: "Vegetarian Spring Rolls",
+    image: "https://www.example.com/spring-rolls.jpg",
+    country: "Vietnam",
+    vegetarian: true,
+    ingredients: ["cabbage", "carrot", "vermicelli", "chili sauce"],
+    steps: [
+      "Roll vegetables in rice paper.",
+      "Fry until crispy.",
+      "Serve with chili dip."
+    ]
+  },
+  {
+    name: "Tandoori Broccoli",
+    image: "https://www.example.com/tandoori-broccoli.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["broccoli", "yogurt", "chili powder", "garam masala"],
+    steps: [
+      "Marinate broccoli in spicy mix.",
+      "Roast or grill until charred.",
+      "Serve hot with chutney."
+    ]
+  },
+  {
+    name: "Queso Fundido with Jalapeños",
+    image: "https://www.example.com/queso-fundido.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["cheese", "jalapeños", "onions", "tortilla chips"],
+    steps: [
+      "Melt cheese with sautéed jalapeños.",
+      "Serve with tortilla chips.",
+      "Enjoy hot and gooey."
+    ]
+  },
+  {
+    name: "Masala Corn",
+    image: "https://www.example.com/masala-corn.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["corn", "butter", "spices", "lime juice"],
+    steps: [
+      "Sauté corn with butter and spices.",
+      "Squeeze lime on top.",
+      "Serve warm in cups."
+    ]
+  },
+  {
+    name: "Spicy Samosa",
+    image: "https://www.example.com/samosa.jpg",
+    country: "India",
+    vegetarian: true,
+    ingredients: ["potatoes", "peas", "chili", "pastry dough"],
+    steps: [
+      "Stuff dough with spicy potato mix.",
+      "Deep fry until golden.",
+      "Serve with chutney."
+    ]
+  },
+  {
+    name: "Spicy Nachos",
+    image: "https://www.example.com/spicy-nachos.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["nachos", "cheese", "jalapeños", "beans", "salsa"],
+    steps: [
+      "Layer nachos with toppings.",
+      "Bake until cheese melts.",
+      "Serve with salsa and guacamole."
+    ]
+  },
+  {
+    name: "Sweet Potato Chips with Chili",
+    image: "https://www.example.com/sweet-potato-chips.jpg",
+    country: "USA",
+    vegetarian: true,
+    ingredients: ["sweet potatoes", "chili powder", "salt", "oil"],
+    steps: [
+      "Thinly slice sweet potatoes.",
+      "Fry or bake with chili powder.",
+      "Serve crispy with dip."
+    ]
+  },
+  {
+    name: "Cheese and Chili Taquitos",
+    image: "https://www.example.com/taquitos.jpg",
+    country: "Mexico",
+    vegetarian: true,
+    ingredients: ["tortillas", "cheese", "jalapeños", "spices"],
+    steps: [
+      "Roll cheese and chili in tortillas.",
+      "Fry until crisp.",
+      "Serve with sour cream or salsa."
+    ]
+  }
+];
+
+   
+
+    const allIngredients = [...new Set(recipes.flatMap(r => r.ingredients))];
+
+    function handleInput() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase();
+      const suggestions = allIngredients.filter(ing => ing.startsWith(input));
+      const autoList = document.getElementById("autocompleteList");
+
+      autoList.innerHTML = "";
+      suggestions.forEach(s => {
+        const item = document.createElement("div");
+        item.className = "autocomplete-item";
+        item.textContent = s;
+        item.onclick = () => {
+          document.getElementById("ingredientInput").value = s;
+          autoList.innerHTML = "";
+          searchRecipes();
+        };
+        autoList.appendChild(item);
+      });
+
+      searchRecipes();
+    }
+
+    function searchRecipes() {
+      const input = document.getElementById("ingredientInput").value.toLowerCase().split(',').map(i => i.trim());
+      const resultDiv = document.getElementById("recipeResults");
+      resultDiv.innerHTML = "";
+
+      const filtered = recipes.filter(recipe =>
+        input.some(ing => recipe.ingredients.includes(ing))
+      );
+
+      filtered.forEach(recipe => {
+        const card = document.createElement("div");
+        card.classList.add("recipe-card");
+        card.innerHTML = `
+          <img src="${recipe.image}" alt="${recipe.name}">
+          <h3>${recipe.name} (${recipe.country})</h3>
+          <p><strong>Ingredients:</strong> ${recipe.ingredients.join(", ")}</p>
+          <div class="steps">
+            <strong>Steps:</strong>
+            <ol>${recipe.steps.map(step => `<li>${step}</li>`).join("")}</ol>
+          </div>
+        `;
+        resultDiv.appendChild(card);
+      });
+    }
+  </script>
+</body>
+</html>

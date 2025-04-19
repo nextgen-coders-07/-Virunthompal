@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign Up</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f7fa;
+      color: #333;
+      display: flex;
+      height: 100vh;
+    }
+
+    .logo {
+      font-size: 1.8rem;
+      font-weight: bold;
+      margin-bottom: 3rem;
+      text-align: center;
+      color: #4a90e2;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1rem;
+      margin-bottom: 1rem;
+      border-radius: 10px;
+      text-decoration: none;
+      color: #333;
+      transition: 0.3s ease;
+    }
+
+    .nav-item:hover {
+      background-color: #eaf1f8;
+      color: #4a90e2;
+    }
+
+    .nav-item i {
+      font-size: 1.2rem;
+      width: 25px;
+      text-align: center;
+    }
+
+    .main {
+      flex: 1;
+      padding: 3rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+    }
+
+    .main h1 {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .main p {
+      font-size: 1.2rem;
+      color: #666;
+      max-width: 600px;
+    }
+
+    /* Sign Up form styling */
+    .container {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+      width: 400px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    input {
+      width: 100%;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+
+    .btn {
+      background-color: #4a90e2;
+      color: white;
+      padding: 1rem;
+      border: none;
+      border-radius: 10px;
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .btn:hover {
+      background-color: #2a64d6;
+    }
+
+    .error {
+      color: red;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 768px) {
+      nav {
+        width: 70px;
+        padding: 1rem 0.5rem;
+        align-items: center;
+      }
+
+      .logo {
+        font-size: 1.2rem;
+        margin-bottom: 2rem;
+      }
+
+      .nav-item span {
+        display: none;
+      }
+
+      .nav-item {
+        justify-content: center;
+        margin-bottom: 1.2rem;
+      }
+
+      .main {
+        padding: 2rem;
+      }
+
+      .main h1 {
+        font-size: 2rem;
+      }
+
+      .main p {
+        font-size: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="main">
+    <div class="container">
+      <h2>Sign Up</h2>
+      <form id="signupForm">
+        <input type="text" id="username" placeholder="Username" required>
+        <input type="password" id="password" placeholder="Password (4 digits)" required>
+        <button type="submit" class="btn">Sign Up</button>
+      </form>
+      <p class="error" id="error"></p>
+      <p>Already have an account? <a href="index.html">Login here</a></p>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('signupForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const errorElement = document.getElementById('error');
+
+      // Check if password is exactly 4 digits
+      if (password.length !== 4 || isNaN(password)) {
+        errorElement.textContent = 'Password must be exactly 4 digits.';
+        return;
+      }
+
+      // Store username and password in localStorage
+      localStorage.setItem('username', username);
+      localStorage.setItem('password', password);
+
+      alert('Sign Up Successful! Please Login.');
+      window.location.href = 'index.html'; // Redirect to login page
+    });
+  </script>
+
+</body>
+</html>
